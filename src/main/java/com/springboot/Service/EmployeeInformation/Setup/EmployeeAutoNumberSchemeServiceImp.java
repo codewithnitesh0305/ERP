@@ -3,7 +3,6 @@ package com.springboot.Service.EmployeeInformation.Setup;
 import com.springboot.Model.EmployeeInformation.Setup.EmployeeAutoNumber;
 import com.springboot.Repository.CustomRepo.CustomRepo;
 import com.springboot.Repository.EmployeeInformation.Setup.EmployeeAutoNumberSchemeRepository;
-import com.springboot.Repository.Organization.FinancialYearRepository;
 import com.springboot.Utility.ApiResponse;
 import com.springboot.Utility.Utilities;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,7 +32,7 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
             financialYearId = financialYearId == -1 ? null : financialYearId;
 
             if(startingNo == null) return ApiResponse.apiValidation("Starting No. is required.");
-
+            System.out.println("Test");
              EmployeeAutoNumber existingAutoNumberScheme =  employeeAutoNumberSchemeRepository.getEmployeeAutoNoSchemeByFinancialYearId(financialYearId);
              if(existingAutoNumberScheme != null && !existingAutoNumberScheme.getId().equals(id)) return ApiResponse.apiValidation("Auto Number Scheme of this financial year already exist.");
 
