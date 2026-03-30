@@ -31,17 +31,17 @@ public class BloodGroupServiceImp implements BloodGroupService{
             if(name.isEmpty()) return ApiResponse.apiValidation("Blood Group is required.");
 
             BloodGroup existingBloodGroup = bloodGroupRepository.findByName(name);
-            if(existingBloodGroup != null && existingBloodGroup.getName().equals(name) && !existingBloodGroup.getId().equals(id)) return ApiResponse.apiValidation("Department already exist.");
+            if(existingBloodGroup != null && existingBloodGroup.getName().equals(name) && !existingBloodGroup.getId().equals(id)) return ApiResponse.apiValidation("Blood group already exist.");
 
             BloodGroup bloodGroup = id == null ? new BloodGroup() : bloodGroupRepository.findById(id).orElseThrow(() -> new RuntimeException("Blood group not fount."));
             bloodGroup.setName(name);
             if(id == null){
                 bloodGroup.setIsActive(true);
                 bloodGroup.setCreatedBy(null);
-                bloodGroup.setCreatedOn(LocalDateTime.now());
+                bloodGroup.setCreatedOn(Utilities.getCurrentDateTime());
             }else{
                 bloodGroup.setUpdatedBy(null);
-                bloodGroup.setUpdatedOn(LocalDateTime.now());
+                bloodGroup.setUpdatedOn(Utilities.getCurrentDateTime());
             }
             bloodGroupRepository.save(bloodGroup);
         }catch (Exception ex){
@@ -81,7 +81,7 @@ public class BloodGroupServiceImp implements BloodGroupService{
             BloodGroup bloodGroup = bloodGroupRepository.findById(bloodGroupId).orElseThrow(() -> new RuntimeException("Blood group not found."));
             bloodGroup.setIsActive(isActive);
             bloodGroup.setUpdatedBy(null);
-            bloodGroup.setUpdatedOn(LocalDateTime.now());
+            bloodGroup.setUpdatedOn(Utilities.getCurrentDateTime());
             bloodGroupRepository.save(bloodGroup);
             return ApiResponse.apiSuccess();
         }catch (Exception ex){

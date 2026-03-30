@@ -1,16 +1,16 @@
-package com.springboot.Model.Organizations;
+package com.springboot.Model.EmployeeInformation.Setup;
 
+import io.micrometer.core.annotation.Counted;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
-@Table(name = "organization_blood_group")
+@Table(name = "employee_type")
 @NoArgsConstructor
 @Data
-public class BloodGroup {
+public class EmployeeType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,18 +19,16 @@ public class BloodGroup {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "is_active", columnDefinition = "BOOLEAN DEFAULT TRUE")
-    private Boolean isActive;
-
-    @Column(name = "create_by")
+    @Column(name = "created_by")
     private Long createdBy;
 
     @Column(name = "created_on")
     private String createdOn;
 
     @Column(name = "updated_by")
-    private Long updatedBy;
+    private Long updateBy;
 
     @Column(name = "updated_on")
     private String updatedOn;
+
 }

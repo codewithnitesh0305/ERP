@@ -2,6 +2,7 @@ package com.springboot.Controller.EmployeeInformation;
 
 import com.springboot.Payload.Response;
 import com.springboot.Service.EmployeeInformation.Setup.EmployeeAutoNumberSchemeService;
+import com.springboot.Service.EmployeeInformation.Setup.EmployeeTypeService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import java.util.Map;
 public class EmployeeController {
 
     private final EmployeeAutoNumberSchemeService employeeAutoNumberSchemeService;
+    private final EmployeeTypeService employeeTypeService;
 
     @PostMapping("/auto-number-scheme")
     public ResponseEntity<?> saveUpdateAutoNoScheme(@RequestBody Map<String,Object> param, HttpServletRequest request){
@@ -35,6 +37,22 @@ public class EmployeeController {
     @DeleteMapping("/auto-number-scheme")
     public ResponseEntity<?> deleteAutoNumberScheme(@RequestParam Map<String,Object> param, HttpServletRequest request){
         return employeeAutoNumberSchemeService.deleteAutoNumberScheme(param,request);
+    }
+
+
+    @PostMapping("/employee-type")
+    public ResponseEntity<?> saveUpdateEmployeeType(@RequestBody Map<String,Object> param,HttpServletRequest request){
+        return employeeTypeService.saveUpdateEmployeeType(param,request);
+    }
+
+    @GetMapping("/employee-type")
+    public ResponseEntity<?> getAllEmployeeType(@RequestParam Map<String,Object> param,HttpServletRequest request){
+        return new ResponseEntity<>(new Response<>("Successfully",employeeTypeService.getAllEmployeeType(param,request)),HttpStatus.OK);
+    }
+
+    @DeleteMapping("/employee-type")
+    public ResponseEntity<?> deleteEmployeeType(@RequestParam Map<String,Object> param,HttpServletRequest request) {
+        return employeeTypeService.deleteEmployeeType(param, request);
     }
 
 }
