@@ -2,6 +2,7 @@ package com.springboot.Controller.EmployeeInformation;
 
 import com.springboot.Payload.Response;
 import com.springboot.Service.EmployeeInformation.Setup.EmployeeAutoNumberSchemeService;
+import com.springboot.Service.EmployeeInformation.Setup.EmployeeDocumentService;
 import com.springboot.Service.EmployeeInformation.Setup.EmployeeTypeService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class EmployeeController {
 
     private final EmployeeAutoNumberSchemeService employeeAutoNumberSchemeService;
     private final EmployeeTypeService employeeTypeService;
+    private final EmployeeDocumentService employeeDocumentService;
 
     @PostMapping("/auto-number-scheme")
     public ResponseEntity<?> saveUpdateAutoNoScheme(@RequestBody Map<String,Object> param, HttpServletRequest request){
@@ -39,7 +41,6 @@ public class EmployeeController {
         return employeeAutoNumberSchemeService.deleteAutoNumberScheme(param,request);
     }
 
-
     @PostMapping("/employee-type")
     public ResponseEntity<?> saveUpdateEmployeeType(@RequestBody Map<String,Object> param,HttpServletRequest request){
         return employeeTypeService.saveUpdateEmployeeType(param,request);
@@ -53,6 +54,21 @@ public class EmployeeController {
     @DeleteMapping("/employee-type")
     public ResponseEntity<?> deleteEmployeeType(@RequestParam Map<String,Object> param,HttpServletRequest request) {
         return employeeTypeService.deleteEmployeeType(param, request);
+    }
+
+    @PostMapping("/employee-document")
+    public ResponseEntity<?> saveUpdateEmployeeDocument(@RequestBody Map<String,Object> param,HttpServletRequest request){
+        return employeeDocumentService.saveUpdateEmployeeDocument(param,request);
+    }
+
+    @GetMapping("/employee-document")
+    public ResponseEntity<?> getAllEmployeeDocument(@RequestParam Map<String,Object> param,HttpServletRequest request){
+        return new ResponseEntity<>(new Response<>("Successfully",employeeDocumentService.getAllEmployeeDocument(param,request)),HttpStatus.OK);
+    }
+
+    @DeleteMapping("/employee-document")
+    public ResponseEntity<?> deleteEmployeeDocument(@RequestParam Map<String,Object> param,HttpServletRequest request) {
+        return employeeDocumentService.deleteEmployeeDocument(param, request);
     }
 
 }

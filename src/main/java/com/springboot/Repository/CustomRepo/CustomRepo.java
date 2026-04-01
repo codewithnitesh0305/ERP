@@ -5,8 +5,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 public class CustomRepo {
@@ -45,6 +48,16 @@ public class CustomRepo {
         orderBy = Utilities.orderByValue(orderBy);
         String query = "Select id as value ,financial_year_name as label from financial_year" + filter + orderBy;
         return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
+    }
+
+    public Map<String,Object> getAllDepartment(){
+        Map<String,Object> result_map = new LinkedHashMap<>();
+        String query = "Select dep.id as value, dep.name as label from department as dep";
+        List<Map<String,Object>> departmentList = Utilities.getToupleRecordsWithObjects(entityManager,query,null);
+        Map<Long,String> departmentMap = departmentList.stream().collect(Collectors.toMap(dep -> Utilities.longValue(dep.get("value")),dep -> Utilities.stringValue(dep.get("label"))));
+        result_map.put("departmentList",departmentList);
+        result_map.put("departmentMap",departmentMap);
+        return result_map;
     }
 
 
