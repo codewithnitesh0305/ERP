@@ -31,6 +31,7 @@ public class EmployeeDocumentServiceImp implements EmployeeDocumentService{
             Boolean isMandatory = Utilities.booleanValue(param.get("isMandatory"));
 
             if(!documentName.isEmpty()) return ApiResponse.apiValidation("Document name is required.");
+            if(departmentId == null || departmentId == -1) departmentId = null;
 
             EmployeeDocument existingDocument =  employeeDocumentRepository.findByName(documentName);
             if(existingDocument != null && existingDocument.getName().equals(documentName) && existingDocument.getId().equals(id)) return ApiResponse.apiValidation("Document already exist.");
@@ -73,7 +74,12 @@ public class EmployeeDocumentServiceImp implements EmployeeDocumentService{
                     Map<String, Object> map = new LinkedHashMap<>();
                     String name = Utilities.stringValue(documentMap.get("name"));
                     Long departmentId = Utilities.longValue(documentMap.get("department_id"));
-                    String departmentName = Utilities.stringValue(departmentMap.get(departmentId));
+                    String departmentName = null;
+                    if(departmentId == null){
+                        departmentName = "All";
+                    }else{
+                        departmentName = Utilities.stringValue(departmentMap.get(departmentId));
+                    }
                     Boolean isEmployeeAllowToUpload = Utilities.booleanValue(documentMap.get("is_document_upload"));
                     String isEmployeeAllowToUploadStr = isEmployeeAllowToUpload ? "Yes" : "No";
                     Boolean isReminderRequired = Utilities.booleanValue(documentMap.get("is_reminder_required"));
