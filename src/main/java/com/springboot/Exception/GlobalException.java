@@ -33,10 +33,32 @@ public class GlobalException {
 
     // Handle user not found (UsernameNotFoundException)
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UsernameNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> userNotFoundException(UsernameNotFoundException ex, HttpServletRequest request) {
         ErrorResponse response = new ErrorResponse(
                 "User not found",
                 HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> resourceNoFoundException(ResourceNotFoundException ex, HttpServletRequest request) {
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ErrorResponse> validationException(ValidationException ex, HttpServletRequest request) {
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST.value(),
                 LocalDateTime.now(),
                 request.getRequestURI()
         );
