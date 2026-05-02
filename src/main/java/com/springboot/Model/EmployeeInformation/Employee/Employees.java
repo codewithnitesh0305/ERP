@@ -45,7 +45,7 @@ public class Employees {
     private String dateOfBirth;
 
     @Column(name = "contact_no_country_code")
-    private String contactNoCountryCode;
+    private Long contactNoCountryCode;
 
     @Column(name = "contact_no")
     private String contactNo;
@@ -96,7 +96,7 @@ public class Employees {
     private String fatherName;
 
     @Column(name = "father_contact_no_country_code")
-    private String fatherContactNoCountryCode;
+    private Long fatherContactNoCountryCode;
 
     @Column(name = "father_contact_no")
     private String fatherContactNo;
@@ -111,7 +111,7 @@ public class Employees {
     private String motherName;
 
     @Column(name = "mother_contact_no_country_code")
-    private String motherContactNoCountryCode;
+    private Long motherContactNoCountryCode;
 
     @Column(name = "mother_contact_no")
     private String motherContactNo;
@@ -126,7 +126,7 @@ public class Employees {
     private String spouseName;
 
     @Column(name = "spouse_contact_no_country_code")
-    private String spouseContactNoCountryCode;
+    private Long spouseContactNoCountryCode;
 
     @Column(name = "spouse_contact_no")
     private String spouseContactNo;
@@ -152,20 +152,20 @@ public class Employees {
     @Column(name = "permanent_pin_code")
     private String permanentPinCode;
 
-    @Column(name = "correspondence_address", columnDefinition = "TEXT")
-    private String correspondenceAddress;
+    @Column(name = "corresponding_address", columnDefinition = "TEXT")
+    private String correspondingAddress;
 
-    @Column(name = "correspondence_country_id")
-    private Long correspondenceCountryId;
+    @Column(name = "corresponding_country_id")
+    private Long correspondingCountryId;
 
-    @Column(name = "correspondence_state_id")
-    private Long correspondenceStateId;
+    @Column(name = "corresponding_state_id")
+    private Long correspondingStateId;
 
-    @Column(name = "correspondence_city_id")
-    private Long correspondenceCityId;
+    @Column(name = "corresponding_city_id")
+    private Long correspondingCityId;
 
-    @Column(name = "correspondence_pin_code")
-    private String correspondencePinCode;
+    @Column(name = "corresponding_pin_code")
+    private String correspondingPinCode;
 
     @Column(name = "account_name")
     private String accountName;
