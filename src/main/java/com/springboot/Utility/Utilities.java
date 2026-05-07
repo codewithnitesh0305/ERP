@@ -132,4 +132,8 @@ public class Utilities {
         return returnList;
     }
 
+    public static boolean isCollectionNotEmpty(Collection<?> collection) {
+        return collection != null && !collection.isEmpty();
+    }
+
 }

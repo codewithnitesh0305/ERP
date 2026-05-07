@@ -1,28 +1,43 @@
 package com.springboot.Service.EmployeeInformation.Employees;
 
 import com.springboot.Exception.ResourceNotFoundException;
+import com.springboot.Exception.ValidationException;
+import com.springboot.Model.EmployeeInformation.Employee.EmployeeDocumentSubmission;
 import com.springboot.Model.EmployeeInformation.Employee.Employees;
+import com.springboot.Model.EmployeeInformation.Setup.EmployeeDocument;
+import com.springboot.Model.User.Users;
+import com.springboot.Repository.EmployeeInformation.Employees.EmployeeDocumentSubmissionRepository;
 import com.springboot.Repository.EmployeeInformation.Employees.EmployeeRepository;
+import com.springboot.Repository.EmployeeInformation.Setup.EmployeeDocumentRepository;
+import com.springboot.Repository.User.UserRepository;
+import com.springboot.Service.Cloudinary.FileManager;
 import com.springboot.Utility.ApiResponse;
 import com.springboot.Utility.Utilities;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.hc.client5.http.entity.mime.MultipartPart;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.codec.Utf8;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Map;
-import java.util.Objects;
+import java.io.IOException;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class EmployeeServiceImp implements EmployeeService{
 
     private final EmployeeRepository employeeRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final EmployeeDocumentRepository employeeDocumentRepository;
+    private final EmployeeDocumentSubmissionRepository employeeDocumentSubmissionRepository;
 
     @Override
-    public ResponseEntity<?> saveUpdateEmployee(Map<String, MultipartPart> file, Map<String, Object> param, HttpServletRequest request) {
+    public ResponseEntity<?> saveUpdateEmployee(Map<String, MultipartFile> file, Map<String, Object> param, HttpServletRequest request) {
         try{
             Long id = Utilities.longValue(param.get("id"));
             String firstName = Utilities.stringValue(param.get("firstName"));
@@ -129,12 +144,85 @@ public class EmployeeServiceImp implements EmployeeService{
             employees.setBankName(Utilities.stringValue(param.get("bankName")));
             employees.setBranch(Utilities.stringValue(param.get("branchName")));
 
-            employeeRepository.save(employees);
-
+            Long employeeId = employeeRepository.save(employees).getId();
+            processedDocument(file,param,employeeId,request);
+            if(id == null){
+                Users user = new Users();
+                user.setUserId(emailId);
+                user.setEmployeeId(employeeId);
+                user.setPassword(passwordEncoder.encode("HRNest@123"));
+                user.setCreatedBy(null);
+                user.setCreatedOn(Utilities.getCurrentDateTime());
+                userRepository.save(user);
+            }
             return ApiResponse.apiSuccess();
         }catch (Exception ex){
             throw new RuntimeException("Something went wrong "+ex.getMessage());
         }
+    }
+
+    public void processedDocument(Map<String,MultipartFile> fileMap,Map<String,Object> parma,Long employeeId,HttpServletRequest request) throws IOException {
+        String documentListStr = Utilities.stringValue(parma.get("documentList"));
+        Long departmentId = Utilities.longValue(parma.get("departmentId"));
+        List<Map<String, Object>> documentMapList = parseEmployeeDocumentJson(documentListStr);
+
+        List<EmployeeDocument> employeeDocumentList = employeeDocumentRepository.findByDepartmentId(departmentId);
+        Map<Long,Boolean> employeeDocumentMap = new HashMap<>();
+        if(Utilities.isCollectionNotEmpty(employeeDocumentList)){
+            for(EmployeeDocument employeeDocument : employeeDocumentList){
+                Long documentId = employeeDocument.getId();
+                Boolean isMandatory = employeeDocument.getIsMandatory();
+                employeeDocumentMap.put(documentId,isMandatory);
+            }
+        }
+
+        if(Utilities.isCollectionNotEmpty(documentMapList)){
+            for(Map<String,Object> documentDataMap : documentMapList){
+                Long id = Utilities.longValue(documentDataMap.get("id"));
+                EmployeeDocumentSubmission documentSubmission = id == null ? new EmployeeDocumentSubmission() : employeeDocumentSubmissionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Document Not found."));
+                Long documentId = Utilities.longValue(documentDataMap.get("documentId"));
+                String documentName = Utilities.stringValue(documentDataMap.get("documentName"));
+                String documentExpiryDate = Utilities.getUSDateFromIndianDate(Utilities.stringValue(documentDataMap.get("documentExpiryDate")));
+                String fileName = Utilities.stringValue(documentDataMap.get("fileName"));
+                String documentNumber = Utilities.stringValue(documentDataMap.get("documentNumber"));
+                Boolean isFileChange = Utilities.booleanValue(documentDataMap.get("isFileChange"));
+                Boolean isDocumentMandatory = employeeDocumentMap.get(documentId);
+                if(isDocumentMandatory && (documentNumber.isEmpty() || documentExpiryDate.isEmpty())) throw new ValidationException(documentName+" details is mandatory");
+                MultipartFile multipartPart = fileMap.get(fileName);
+                if(isFileChange){
+                    String documentJson = FileManager.uploadFile(multipartPart);
+                    String documentUrl = Utilities.stringValue(documentSubmission.getDocumentUrl());
+                    if(!documentJson.isEmpty()){
+                        FileManager.deleteFile(documentJson);
+                    }
+                    documentSubmission.setEmployeeId(employeeId);
+                    documentSubmission.setDocumentName(documentName);
+                    documentSubmission.setDocumentId(documentId);
+                    documentSubmission.setDepartmentId(departmentId);
+                    documentSubmission.setDocumentNo(documentNumber);
+                    documentSubmission.setDocumentExpiryDate(documentExpiryDate);
+                    employeeDocumentSubmissionRepository.save(documentSubmission);
+                }
+            }
+        }
+    }
+
+    public List<Map<String, Object>> parseEmployeeDocumentJson(String documentListStr) {
+        List<Map<String, Object>> documentMapList = new ArrayList<>();
+        if (documentListStr != null && !documentListStr.isEmpty()) {
+            JSONArray jsonArray = new JSONArray(documentListStr);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                Map<String, Object> documentMap = new HashMap<>();
+                Iterator<String> keys = jsonObject.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    documentMap.put(key, jsonObject.optString(key));
+                }
+                documentMapList.add(documentMap);
+            }
+        }
+        return documentMapList;
     }
 
     @Override

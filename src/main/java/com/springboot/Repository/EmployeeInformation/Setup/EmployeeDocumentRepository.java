@@ -16,4 +16,6 @@ public interface EmployeeDocumentRepository extends JpaRepository<EmployeeDocume
 
     @Query(nativeQuery = true, value = "Select * from employee_document empDoc where (:fts IS NULL OR empDoc.name LIKE :fts)")
     List<Map<String,Object>> getAllDocument(@Param("fts") String fts);
+
+    List<EmployeeDocument> findByDepartmentId(Long departmentId);
 }

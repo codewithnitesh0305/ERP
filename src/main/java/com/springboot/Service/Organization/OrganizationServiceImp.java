@@ -25,7 +25,6 @@ import java.util.Map;
 public class OrganizationServiceImp implements OrganizationService{
 
     private OrganizationRepository organizationRepository;
-    private FileManager cloudinaryService;
     private CustomRepo customRepo;
 
     @Override
@@ -96,12 +95,11 @@ public class OrganizationServiceImp implements OrganizationService{
 
 
             Organization organization = organizationId != null ? organizationRepository.findById(organizationId).orElseThrow(() -> new RuntimeException("Organization not found.")) : new Organization();
-            JSONObject jsonObject = new JSONObject();
+            String  organizationLogo = null;
             if(isLogoUpdate){
-                String  organizationLogo = Utilities.stringValue(cloudinaryService.uploadFileInCloud(file).get("imageUrl"));
-                 jsonObject.put("serving_url",organizationLogo);
+                organizationLogo = Utilities.stringValue(FileManager.uploadFile(file));
             }
-            organization.setOrganizationLogo(jsonObject.toString());
+            organization.setOrganizationLogo(organizationLogo);
             organization.setName(organizationName);
             organization.setOrganizationCode(organizationCode);
             organization.setAffiliatedNo(affiliatedNo);
