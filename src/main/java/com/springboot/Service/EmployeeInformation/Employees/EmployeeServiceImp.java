@@ -6,11 +6,16 @@ import com.springboot.Model.EmployeeInformation.Employee.EmployeeDocumentSubmiss
 import com.springboot.Model.EmployeeInformation.Employee.Employees;
 import com.springboot.Model.EmployeeInformation.Setup.EmployeeDocument;
 import com.springboot.Model.User.Users;
+import com.springboot.Repository.CustomRepo.CustomRepo;
 import com.springboot.Repository.EmployeeInformation.Employees.EmployeeDocumentSubmissionRepository;
 import com.springboot.Repository.EmployeeInformation.Employees.EmployeeRepository;
+import com.springboot.Repository.EmployeeInformation.Employees.EmployeeStaticQuery;
 import com.springboot.Repository.EmployeeInformation.Setup.EmployeeDocumentRepository;
+import com.springboot.Repository.Organization.FinancialYearRepository;
+import com.springboot.Repository.Organization.SalutationRepository;
 import com.springboot.Repository.User.UserRepository;
 import com.springboot.Service.Cloudinary.FileManager;
+import com.springboot.Service.Organization.FinancialYear.FinancialYearService;
 import com.springboot.Utility.ApiResponse;
 import com.springboot.Utility.Utilities;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +41,9 @@ public class EmployeeServiceImp implements EmployeeService{
     private final PasswordEncoder passwordEncoder;
     private final EmployeeDocumentRepository employeeDocumentRepository;
     private final EmployeeDocumentSubmissionRepository employeeDocumentSubmissionRepository;
+    private final FinancialYearRepository financialYearRepository;
+    private final CustomRepo customRepo;
+    private final SalutationRepository salutationRepository;
 
     @Override
     public ResponseEntity<?> saveUpdateEmployee(Map<String, MultipartFile> file, Map<String, Object> param, HttpServletRequest request) {
@@ -227,7 +236,74 @@ public class EmployeeServiceImp implements EmployeeService{
 
     @Override
     public Map<String, Object> getAllEmployees(Map<String, Object> param, HttpServletRequest request) {
-        return null;
+        Map<String,Object> result_map = new LinkedHashMap<>();
+        try{
+            Long employeeTypeId = Utilities.longValue(param.get("employeeTypeId"));
+            Long departmentId = Utilities.longValue(param.get("departmentId"));
+            Long designationId = Utilities.longValue(param.get("designationId"));
+            Long genderId = Utilities.longValue(param.get("genderId"));
+            Long financialYearId = Utilities.longValue(param.get("financialYearId"));
+
+            if(financialYearId == null){
+                financialYearId = financialYearRepository.findIdByIsActiveTrue();
+            }
+            StringBuilder filter = new StringBuilder();
+            if(employeeTypeId != null){
+                filter.append(" emp.employee_type_id = ").append(employeeTypeId);
+            }
+            if(departmentId != null){
+                if(!filter.isEmpty()) filter.append(" and ");
+                filter.append(" emp.department_id = ").append(departmentId);
+            }
+            if(designationId != null){
+                if(!filter.isEmpty()) filter.append(" and ");
+                filter.append(" emp.designation_id = ").append(designationId);
+            }
+            if(departmentId != null){
+                if(!filter.isEmpty()) filter.append(" and ");
+                filter.append(" emp.department_id = ").append(departmentId);
+            }
+
+            Map<String, Object> allDepartment = customRepo.getAllDepartment();
+            List<Map<String,Object>> departmentList = (List<Map<String, Object>>) allDepartment.get("departmentList");
+            Map<String,Object> departmentMap = (Map<String,Object>) allDepartment.get("departmentMap");
+
+            Map<String, Object> allDesignation = customRepo.getAllDesignation();
+            List<Map<String,Object>> designationList = (List<Map<String,Object> >) allDesignation.get("designationList");
+            Map<String,Object> designationMap = (Map<String,Object>) allDepartment.get("designationMap");
+
+            Map<String, Object> allEmployeeType = customRepo.getAllEmployeeType();
+            List<Map<String,Object>> employeeTypeList = (List<Map<String, Object>>) allEmployeeType.get("employeeTypeList");
+            Map<String,Object> employeeTypeMap = (Map<String,Object>) allEmployeeType.get("employeeTypeMap");
+
+            Map<Long,String> salutationMap = salutationRepository.salutationList().stream().collect(Collectors.toMap(sal-> Utilities.longValue(sal.get("id")),sal-> Utilities.stringValue(sal.get("name"))));
+
+            List<Map<String,Object>> employeeList = new ArrayList<>();
+
+            List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_LIST, filter.toString(), null, "emp.created_on desc");
+            if(Utilities.isCollectionNotEmpty(employeeMapList)){
+                for(Map<String,Object> employeeMap : employeeMapList){
+                    Long id = Utilities.longValue(employeeMap.get("id"));
+                    String employeeCode = Utilities.stringValue(employeeMap.get("employeeCode"));
+                    String salutation = Utilities.stringValue(salutationMap.get(Utilities.longValue(employeeMap.get("salutationId"))));
+                    String fullName = Utilities.stringValue(employeeMap.get("fullName"));
+                    fullName = fullName.isEmpty() ? "" : salutation.isEmpty() ? fullName : salutation + fullName;
+                    String emailId = Utilities.stringValue(employeeMap.get("emailId"));
+                    String contactNoCountryCode = Utilities.stringValue(employeeMap.get("contactNoCountryCode"));
+                    String contactNo = Utilities.stringValue(employeeMap.get("contactNo"));
+                    contactNo = contactNo.isEmpty() ? "" : contactNoCountryCode.isEmpty() ? contactNo : "+"+contactNoCountryCode + contactNo;
+
+                }
+            }
+
+            result_map.put("employeeType",employeeTypeList);
+            result_map.put("department",departmentList);
+            result_map.put("designation",designationList);
+            result_map.put("employees",employeeList);
+        }catch (Exception ex){
+            throw new RuntimeException("Something went wrong: "+ ex.getMessage());
+        }
+        return  result_map;
     }
 
     @Override

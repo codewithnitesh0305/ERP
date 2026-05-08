@@ -52,7 +52,7 @@ public class CustomRepo {
 
     public Map<String,Object> getAllDepartment(){
         Map<String,Object> result_map = new LinkedHashMap<>();
-        String query = "Select dep.id as value, dep.name as label from department as dep";
+        String query = "Select dep.id as value, dep.name as label from organization_department dep";
         List<Map<String,Object>> departmentList = Utilities.getToupleRecordsWithObjects(entityManager,query,null);
         Map<Long,String> departmentMap = departmentList.stream().collect(Collectors.toMap(dep -> Utilities.longValue(dep.get("value")),dep -> Utilities.stringValue(dep.get("label"))));
         result_map.put("departmentList",departmentList);
@@ -60,5 +60,32 @@ public class CustomRepo {
         return result_map;
     }
 
+    public Map<String,Object> getAllDesignation(){
+        Map<String,Object> result_map = new LinkedHashMap<>();
+        String query = "Select deg.id as value, deg.name as label from organization_designation deg";
+        List<Map<String,Object>> designationList = Utilities.getToupleRecordsWithObjects(entityManager,query,null);
+        Map<Long,String> designationMap = designationList.stream().collect(Collectors.toMap(dep -> Utilities.longValue(dep.get("value")),dep -> Utilities.stringValue(dep.get("label"))));
+        result_map.put("designationList",designationList);
+        result_map.put("designationMap",designationMap);
+        return result_map;
+    }
+
+    public Map<String,Object> getAllEmployeeType(){
+        Map<String,Object> result_map = new LinkedHashMap<>();
+        String query = "Select empTyp.id as value, empTyp.name as label from employee_type empTyp";
+        List<Map<String,Object>> employeeTypeList = Utilities.getToupleRecordsWithObjects(entityManager,query,null);
+        Map<Long,String> employeeTypeMap = employeeTypeList.stream().collect(Collectors.toMap(dep -> Utilities.longValue(dep.get("value")),dep -> Utilities.stringValue(dep.get("label"))));
+        result_map.put("employeeTypeList",employeeTypeList);
+        result_map.put("employeeTypeMap",employeeTypeMap);
+        return result_map;
+    }
+
+    public List<Map<String,Object>> customizeDataList(String query, String filter,String groupBy,String orderBy){
+        filter = Utilities.filterValue(filter);
+        groupBy = Utilities.groupByValue(groupBy);
+        orderBy = Utilities.orderByValue(orderBy);
+        query += query + filter + groupBy + orderBy;
+        return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
+    }
 
 }
