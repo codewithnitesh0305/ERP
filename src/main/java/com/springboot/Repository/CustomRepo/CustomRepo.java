@@ -17,9 +17,9 @@ public class CustomRepo {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public List<Map<String,Object>> getAllCountryMobileCode(String filter){
+    public List<Map<String,Object>> countryDetailList(String filter){
         filter = Utilities.filterValue(filter);
-        String query = "Select phone_code,max_length FROM country_mobile" + filter;
+        String query = "Select id,country_name as countryName,nationality_name as nationalityName, phone_code as countryCode,max_length as countryCodeMaxLength FROM country_codes" + filter;
         return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
     }
 
@@ -29,19 +29,20 @@ public class CustomRepo {
     }
 
     public List<Map<String,Object>> getAllStates(){
-        String query = "Select id as value, name as label from state";
+        String query = "Select id as value, name as label,country_id as countryId from state";
         return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
     }
 
     public List<Map<String,Object>> getAllCity(){
-        String query = "Select id as value, name as label from city";
+        String query = "Select id as value, name as label,state_id as stateId from city";
         return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
     }
 
     public List<Map<String,Object>> getAllCountryMobileCode(){
-        String query = "Select id as value, phone_code as label from country_mobile";
+        String query = "Select id as value, phone_code as label from country_codes";
         return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
     }
+
 
     public List<Map<String,Object>> getAllFinancialYear(String filter,String orderBy){
         filter = Utilities.filterValue(filter);
@@ -60,6 +61,11 @@ public class CustomRepo {
         return result_map;
     }
 
+    public List<Map<String,Object>> getAllDepartmentList(){
+        String query = "Select dep.id as value, dep.name as label from organization_department dep";
+        return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
+    }
+
     public Map<String,Object> getAllDesignation(){
         Map<String,Object> result_map = new LinkedHashMap<>();
         String query = "Select deg.id as value, deg.name as label from organization_designation deg";
@@ -70,6 +76,13 @@ public class CustomRepo {
         return result_map;
     }
 
+
+
+    public List<Map<String,Object>> getAllDesignationList(){
+        String query = "Select deg.id as value, deg.name as label from organization_designation deg";
+        return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
+    }
+
     public Map<String,Object> getAllEmployeeType(){
         Map<String,Object> result_map = new LinkedHashMap<>();
         String query = "Select empTyp.id as value, empTyp.name as label from employee_type empTyp";
@@ -78,6 +91,11 @@ public class CustomRepo {
         result_map.put("employeeTypeList",employeeTypeList);
         result_map.put("employeeTypeMap",employeeTypeMap);
         return result_map;
+    }
+
+    public List<Map<String,Object>> getAllEmployeeTypeList(){
+        String query = "Select empTyp.id as value, empTyp.name as label from employee_type empTyp";
+        return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
     }
 
     public List<Map<String,Object>> customizeDataList(String query, String filter,String groupBy,String orderBy){
