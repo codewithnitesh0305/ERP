@@ -19,4 +19,9 @@ public interface FinancialYearRepository extends JpaRepository<FinancialYear,Lon
 
     Long findIdByIsActiveTrue();
 
+    @Query(nativeQuery = true,value = "Select id,financial_year_name as name from financial_year_name")
+    List<Map<String,Object>> getFinancialYearList();
+
+
+
 }

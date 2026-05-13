@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
+import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -135,5 +136,24 @@ public class Utilities {
     public static boolean isCollectionNotEmpty(Collection<?> collection) {
         return collection != null && !collection.isEmpty();
     }
+
+    public static String getIndianDateFormatFromUSDate(String usDate) {
+        try {
+            if (usDate == null || usDate.trim().isEmpty()) return "";
+            DateTimeFormatter usFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+            DateTimeFormatter indianFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate date = LocalDate.parse(usDate, usFormatter);
+            return date.format(indianFormatter);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public static String getServingUrlFromImageString(String image){
+        if(image == null || image.isEmpty()) return "";
+        JSONObject jsonObject = new JSONObject(image);
+        return jsonObject.optString("servingUrl");
+    }
+
 
 }

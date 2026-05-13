@@ -17,6 +17,9 @@ public class Employees {
     @Column(name = "school_id")
     private Long schoolId;
 
+    @Column(name = "financial_year_id")
+    private Long financialYearId;
+
     @Column(name = "employee_code")
     private String employeeCode;
 
@@ -45,7 +48,7 @@ public class Employees {
     private String dateOfBirth;
 
     @Column(name = "contact_no_country_code")
-    private Long contactNoCountryCode;
+    private String contactNoCountryCode;
 
     @Column(name = "contact_no")
     private String contactNo;
@@ -96,7 +99,7 @@ public class Employees {
     private String fatherName;
 
     @Column(name = "father_contact_no_country_code")
-    private Long fatherContactNoCountryCode;
+    private String fatherContactNoCountryCode;
 
     @Column(name = "father_contact_no")
     private String fatherContactNo;
@@ -111,7 +114,7 @@ public class Employees {
     private String motherName;
 
     @Column(name = "mother_contact_no_country_code")
-    private Long motherContactNoCountryCode;
+    private String motherContactNoCountryCode;
 
     @Column(name = "mother_contact_no")
     private String motherContactNo;
@@ -181,9 +184,6 @@ public class Employees {
 
     @Column(name = "branch")
     private String branch;
-
-    @Column(name = "document_json", columnDefinition = "TEXT")
-    private String documentJson;
 
     @Column(name = "resign_date")
     private String resignDate;

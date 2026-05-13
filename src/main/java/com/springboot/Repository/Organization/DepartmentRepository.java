@@ -15,4 +15,7 @@ public interface DepartmentRepository extends JpaRepository<Department,Long> {
 
     @Query(nativeQuery = true, value = "SELECT dept.id AS departmentId, dept.name AS departmentName, dept.is_active AS isActive FROM organization_department dept WHERE (:fts IS NULL OR :fts = '' OR dept.name LIKE CONCAT('%', :fts, '%'))")
     List<Map<String,Object>> getAllDepartment(@Param("fts") String fts);
+
+    @Query(nativeQuery = true,value = "SELECT dept.id, dept.name FROM organization_department dept where dept.is_active = true")
+    List<Map<String,Object>> getDepartmentList();
 }
