@@ -17,4 +17,8 @@ public interface EmployeeTypeRepository extends JpaRepository<EmployeeType,Long>
 
     @Query(nativeQuery = true,value = "Select empType.id,empType.name from employee_type empType where (:fts IS NULL OR empType.name LIKE :fts)")
     List<Map<String,Object>> getAllEmployeeType(@Param("fts") String fts);
+
+    @Query("Select id as value, name as label from employee_type where is_active = 1")
+    List<Map<String,Object>> getActiveEmployeeTypeList();
+
 }

@@ -11,6 +11,7 @@ import com.springboot.Repository.EmployeeInformation.Employees.EmployeeDocumentS
 import com.springboot.Repository.EmployeeInformation.Employees.EmployeeRepository;
 import com.springboot.Repository.EmployeeInformation.Employees.EmployeeStaticQuery;
 import com.springboot.Repository.EmployeeInformation.Setup.EmployeeDocumentRepository;
+import com.springboot.Repository.EmployeeInformation.Setup.EmployeeTypeRepository;
 import com.springboot.Repository.Organization.*;
 import com.springboot.Repository.User.UserRepository;
 import com.springboot.Service.Cloudinary.FileManager;
@@ -44,6 +45,7 @@ public class EmployeeServiceImp implements EmployeeService{
     private final GenderRepository genderRepository;
     private final DepartmentRepository departmentRepository;
     private final DesignationRepository designationRepository;
+    private final EmployeeTypeRepository employeeTypeRepository;
 
     @Override
     public ResponseEntity<?> saveUpdateEmployee(Map<String, MultipartFile> file, Map<String, Object> param, HttpServletRequest request) {
@@ -175,10 +177,11 @@ public class EmployeeServiceImp implements EmployeeService{
     public void processedDocument(Map<String,MultipartFile> fileMap,Map<String,Object> parma,Long employeeId,HttpServletRequest request) throws IOException {
         String documentListStr = Utilities.stringValue(parma.get("documentList"));
         Long departmentId = Utilities.longValue(parma.get("departmentId"));
+        String createdOn = Utilities.getCurrentDateTime();
         List<Map<String, Object>> documentMapList = parseEmployeeDocumentJson(documentListStr);
+        Map<Long,Boolean> employeeDocumentMap = new HashMap<>();
 
         List<EmployeeDocument> employeeDocumentList = employeeDocumentRepository.findByDepartmentId(departmentId);
-        Map<Long,Boolean> employeeDocumentMap = new HashMap<>();
         if(Utilities.isCollectionNotEmpty(employeeDocumentList)){
             for(EmployeeDocument employeeDocument : employeeDocumentList){
                 Long documentId = employeeDocument.getId();
@@ -186,11 +189,20 @@ public class EmployeeServiceImp implements EmployeeService{
                 employeeDocumentMap.put(documentId,isMandatory);
             }
         }
-
+        Map<Long,EmployeeDocumentSubmission> existingEmployeeDocumentMap = new LinkedHashMap<>();
+        if(employeeId != null){
+            List<EmployeeDocumentSubmission> existingEmployeeDocument = employeeDocumentSubmissionRepository.findByEmployeeId(employeeId);
+            if(Utilities.isCollectionNotEmpty(existingEmployeeDocument)){
+                for(EmployeeDocumentSubmission documentSubmission : existingEmployeeDocument){
+                    Long id = documentSubmission.getId();
+                    existingEmployeeDocumentMap.put(id,documentSubmission);
+                }
+            }
+        }
+        List<EmployeeDocumentSubmission> documentSubmissionList = new ArrayList<>();
         if(Utilities.isCollectionNotEmpty(documentMapList)){
             for(Map<String,Object> documentDataMap : documentMapList){
                 Long id = Utilities.longValue(documentDataMap.get("id"));
-                EmployeeDocumentSubmission documentSubmission = id == null ? new EmployeeDocumentSubmission() : employeeDocumentSubmissionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Document Not found."));
                 Long documentId = Utilities.longValue(documentDataMap.get("documentId"));
                 String documentName = Utilities.stringValue(documentDataMap.get("documentName"));
                 String documentExpiryDate = Utilities.getUSDateFromIndianDate(Utilities.stringValue(documentDataMap.get("documentExpiryDate")));
@@ -199,23 +211,40 @@ public class EmployeeServiceImp implements EmployeeService{
                 Boolean isFileChange = Utilities.booleanValue(documentDataMap.get("isFileChange"));
                 Boolean isDocumentMandatory = employeeDocumentMap.get(documentId);
                 if(isDocumentMandatory && (documentNumber.isEmpty() || documentExpiryDate.isEmpty())) throw new ValidationException(documentName+" details is mandatory");
+                EmployeeDocumentSubmission employeeDocumentSubmission = null;
                 MultipartFile multipartPart = fileMap.get(fileName);
-                if(isFileChange){
-                    String documentJson = FileManager.uploadFile(multipartPart);
-                    String documentUrl = Utilities.stringValue(documentSubmission.getDocumentUrl());
-                    if(!documentJson.isEmpty()){
-                        FileManager.deleteFile(documentJson);
+                if(existingEmployeeDocumentMap.containsKey(id)){
+                    employeeDocumentSubmission = existingEmployeeDocumentMap.get(id);
+                    if(isFileChange){
+                        String documentJson = FileManager.uploadFile(multipartPart);
+                        if(documentJson != null && !documentJson.isEmpty()){
+                            String documentUrl = Utilities.stringValue(employeeDocumentSubmission.getDocumentUrl());
+                            if(!documentUrl.isEmpty()){
+                                FileManager.deleteFile(documentJson);
+                            }
+                            employeeDocumentSubmission.setDocumentUrl(documentJson);
+                        }else{
+                            employeeDocumentSubmission.setDocumentUrl(null);
+                            employeeDocumentSubmission.setUpdatedBy(null);
+                            employeeDocumentSubmission.setUpdatedOn(Utilities.getCurrentDateTime());
+                        }
                     }
-                    documentSubmission.setEmployeeId(employeeId);
-                    documentSubmission.setDocumentName(documentName);
-                    documentSubmission.setDocumentId(documentId);
-                    documentSubmission.setDepartmentId(departmentId);
-                    documentSubmission.setDocumentNo(documentNumber);
-                    documentSubmission.setDocumentExpiryDate(documentExpiryDate);
-                    employeeDocumentSubmissionRepository.save(documentSubmission);
+                }else{
+                    employeeDocumentSubmission = new EmployeeDocumentSubmission();
+                    String documentJson = FileManager.uploadFile(multipartPart);
+                    employeeDocumentSubmission.setDocumentUrl(documentJson);
+                    employeeDocumentSubmission.setDepartmentId(departmentId);
+                    employeeDocumentSubmission.setDocumentId(documentId);
+                    employeeDocumentSubmission.setEmployeeId(employeeId);
+                    employeeDocumentSubmission.setCreatedBy(null);
+                    employeeDocumentSubmission.setCreatedOn(createdOn);
                 }
+                employeeDocumentSubmission.setDocumentNo(documentNumber);
+                employeeDocumentSubmission.setDocumentExpiryDate(documentExpiryDate);
+                documentSubmissionList.add(employeeDocumentSubmission);
             }
         }
+        employeeDocumentSubmissionRepository.saveAll(documentSubmissionList);
     }
 
     public List<Map<String, Object>> parseEmployeeDocumentJson(String documentListStr) {
@@ -270,20 +299,11 @@ public class EmployeeServiceImp implements EmployeeService{
                 filter.append(" emp.gender_id = ").append(genderId);
             }
 
-            Map<String, Object> allDepartment = customRepo.getAllDepartment();
-            List<Map<String,Object>> departmentList = (List<Map<String, Object>>) allDepartment.get("departmentList");
-            Map<String,Object> departmentMap = (Map<String,Object>) allDepartment.get("departmentMap");
-
-            Map<String, Object> allDesignation = customRepo.getAllDesignation();
-            List<Map<String,Object>> designationList = (List<Map<String,Object> >) allDesignation.get("designationList");
-            Map<String,Object> designationMap = (Map<String,Object>) allDepartment.get("designationMap");
-
-            Map<String, Object> allEmployeeType = customRepo.getAllEmployeeType();
-            List<Map<String,Object>> employeeTypeList = (List<Map<String, Object>>) allEmployeeType.get("employeeTypeList");
-            Map<String,Object> employeeTypeMap = (Map<String,Object>) allEmployeeType.get("employeeTypeMap");
-
-            Map<Long,String> salutationMap = salutationRepository.salutationList().stream().collect(Collectors.toMap(sal -> Utilities.longValue(sal.get("id")), sal -> Utilities.stringValue(sal.get("name"))));
-            Map<Long,String> genderMap = genderRepository.genderList().stream().collect(Collectors.toMap(gen -> Utilities.longValue(gen.get("id")), gen -> Utilities.stringValue(gen.get("name"))));
+            Map<Long,String> employeeTypeMap = employeeTypeRepository.getActiveEmployeeTypeList().stream().collect(Collectors.toMap(sal -> Utilities.longValue(sal.get("value")), sal -> Utilities.stringValue(sal.get("label"))));
+            Map<Long,String> salutationMap = salutationRepository.getActiveSalutationList().stream().collect(Collectors.toMap(sal -> Utilities.longValue(sal.get("value")), sal -> Utilities.stringValue(sal.get("label"))));
+            Map<Long,String> genderMap = genderRepository.getActiveGenderList().stream().collect(Collectors.toMap(gen -> Utilities.longValue(gen.get("value")), gen -> Utilities.stringValue(gen.get("label"))));
+            Map<Long,String> departmentMap = departmentRepository.getActiveDepartmentLIst().stream().collect(Collectors.toMap(gen -> Utilities.longValue(gen.get("value")), gen -> Utilities.stringValue(gen.get("label"))));
+            Map<Long,String> designationMap = designationRepository.getAcitveDesignationList().stream().collect(Collectors.toMap(gen -> Utilities.longValue(gen.get("value")), gen -> Utilities.stringValue(gen.get("label"))));
 
             List<Map<String,Object>> employeeList = new ArrayList<>();
             List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_DATA_QUERY, filter.toString(), null, "emp.created_on desc");
@@ -321,10 +341,6 @@ public class EmployeeServiceImp implements EmployeeService{
                     employeeList.add(dataMap);
                 }
             }
-
-            result_map.put("employeeType",employeeTypeList);
-            result_map.put("department",departmentList);
-            result_map.put("designation",designationList);
             result_map.put("employees",employeeList);
         }catch (Exception ex){
             throw new RuntimeException("Something went wrong: "+ ex.getMessage());
@@ -337,19 +353,9 @@ public class EmployeeServiceImp implements EmployeeService{
         Map<String,Object> result_map = new LinkedHashMap<>();
         try{
             Long id = Utilities.longValue(param.get("id"));
-            
-            List<Map<String,Object>> salutationList = salutationRepository.salutationList();
-            List<Map<String,Object>> genderList = genderRepository.genderList();
-            List<Map<String, Object>> departmentList = departmentRepository.getDepartmentList();
-            List<Map<String, Object>> designationList = designationRepository.getDesignationList();
-            if(id != null){
-                List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_DATA_QUERY, "emp.id = "+ id, null, "emp.created_on desc");
-                result_map.put("employee",employeeMapList);
-            }
-            result_map.put("salutationList",salutationList);
-            result_map.put("genderList",genderList);
-            result_map.put("departmentList",departmentList);
-            result_map.put("designationList",designationList);
+            if(id == null) throw new ValidationException("Employee not found.");
+            List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_DATA_QUERY, "emp.id = "+ id, null, "emp.created_on desc");
+            result_map.put("employee",employeeMapList);
             return result_map;
         }catch (Exception ex){
             throw new RuntimeException("Something went wrong: "+ ex.getMessage());

@@ -17,6 +17,6 @@ public interface GenderRepository extends JpaRepository<Gender,Long> {
     @Query(nativeQuery = true,value = "Select gen.id,gen.name, gen.is_active from organization_gender gen where (:fts IS NULL OR gen.name LIKE :fts)")
     List<Map<String,Object>> getAllGenders(@Param("fts") String fts);
 
-    @Query("SELECT gen.id,gen.name from Gender where gen.IsActive = true")
-    List<Map<String,Object>> genderList();
+    @Query(nativeQuery = true, value = "SELECT gen.id as value,gen.name as label from organization_gender where gen.is_active = true")
+    List<Map<String,Object>> getActiveGenderList();
 }

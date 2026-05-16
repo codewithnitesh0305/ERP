@@ -17,6 +17,6 @@ public interface SalutationRepository extends JpaRepository<Salutation,Long> {
     @Query(nativeQuery = true,value = "Select sal.id,sal.name,sal.is_active from organization_salutation sal where (:fts IS NULL OR sal.name LIKE :fts)")
     List<Map<String,Object>> getAllSalutation(@Param("fts") String fts);
 
-    @Query("SELECT s.id,s.name FROM Salutation s where  s.isActive = true")
-    List<Map<String,Object>> salutationList();
+    @Query(nativeQuery = true,value = "SELECT s.id as value,s.name as label FROM organization_salutation s where  s.is_active = true")
+    List<Map<String,Object>> getActiveSalutationList();
 }
