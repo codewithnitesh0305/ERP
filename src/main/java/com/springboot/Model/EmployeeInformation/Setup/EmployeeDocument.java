@@ -21,14 +21,11 @@ public class EmployeeDocument {
     @Column(name = "department_id")
     private Long departmentId;
 
+    @Column(name = "is_expiry_date")
+    private Boolean isExpiryDate;
+
     @Column(name = "authorized_employee_id")
     private Long authorizedEmployeeId;
-
-    @Column(name = "is_document_upload")
-    private Boolean isDocumentUpload;
-
-    @Column(name = "is_reminder_required")
-    private Boolean isReminderRequired;
 
     @Column(name = "is_mandatory")
     private Boolean isMandatory;

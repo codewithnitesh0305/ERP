@@ -3,6 +3,7 @@ package com.springboot.Service.EmployeeInformation.Setup;
 import com.springboot.Model.EmployeeInformation.Setup.EmployeeAutoNumber;
 import com.springboot.Repository.CustomRepo.CustomRepo;
 import com.springboot.Repository.EmployeeInformation.Setup.EmployeeAutoNumberSchemeRepository;
+import com.springboot.Repository.Organization.DepartmentRepository;
 import com.springboot.Utility.ApiResponse;
 import com.springboot.Utility.Utilities;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,10 +30,11 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
             String startingNoStr = Utilities.stringValue(param.get("startingNo"));
             String postfix = Utilities.stringValue(param.get("postfix"));
             Long financialYearId = Utilities.longValue(param.get("financialYearId"));
+            Long departmentId = Utilities.longValue(param.get("departmentId"));
             financialYearId = financialYearId == -1 ? null : financialYearId;
+            departmentId = departmentId == -1 ? null : departmentId;
 
             if(startingNo == null) return ApiResponse.apiValidation("Starting No. is required.");
-            System.out.println("Test");
              EmployeeAutoNumber existingAutoNumberScheme =  employeeAutoNumberSchemeRepository.getEmployeeAutoNoSchemeByFinancialYearId(financialYearId);
              if(existingAutoNumberScheme != null && !existingAutoNumberScheme.getId().equals(id)) return ApiResponse.apiValidation("Auto Number Scheme of this financial year already exist.");
 
@@ -50,6 +52,7 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
             employeeAutoNumber.setPostfix(postfix);
             employeeAutoNumber.setStartingNoSize(startingNoStr.length());
             employeeAutoNumber.setFinancialYearId(financialYearId);
+            employeeAutoNumber.setDepartmentId(departmentId);
             employeeAutoNumberSchemeRepository.save(employeeAutoNumber);
         }catch (Exception ex){
             throw new RuntimeException(ex);
@@ -68,6 +71,15 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
             List<Map<String,Object>> financialYearList = customRepo.getAllFinancialYear(null,null);
             financialYearList.add(0,allFinancialYearList);
 
+            Map<String,Object> allDepartmentList = new LinkedHashMap<>();
+            allDepartmentList.put("label","All");
+            allDepartmentList.put("value",-1);
+            Map<String, Object> departmentList = customRepo.getAllDepartment();
+            List<Map<String,Object>> activeDepartmentList = (List<Map<String, Object>>) departmentList.get("departmentList");
+            Map<String,Object> activeDepartmentMap = (Map<String, Object>) departmentList.get("departmentMap");
+            activeDepartmentList.add(0,allDepartmentList);
+
+
             Map<Long, Object> financialYearMap = financialYearList.stream().collect(Collectors.toMap(f -> Utilities.longValue(f.get("value")), f -> Utilities.stringValue(f.get("label"))));
             List<EmployeeAutoNumber> employeeAutoNumberList = employeeAutoNumberSchemeRepository.findByDeletedOnIsNullOrderByIdDesc();
             if(employeeAutoNumberList != null && !employeeAutoNumberList.isEmpty()){
@@ -78,12 +90,15 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
                     String postfix = employeeAutoNumber.getPostfix();
                     Boolean isActive = employeeAutoNumber.getIsActive();
                     Long financialYearId = employeeAutoNumber.getFinancialYearId();
+                    Long departmentId = employeeAutoNumber.getDepartmentId();
                     Integer startingNo = employeeAutoNumber.getStartingNo();
                     Integer startingNoSize = employeeAutoNumber.getStartingNoSize();
                     Integer lastNo = employeeAutoNumber.getLastNo();
 
                     financialYearId = financialYearId == null ? -1 : financialYearId;
+                    departmentId = departmentId == null ? -1 : departmentId;
                     String financialYearName = Utilities.stringValue(financialYearMap.getOrDefault(financialYearId,"All"));
+                    String departmentName = Utilities.stringValue(activeDepartmentMap.getOrDefault(departmentId,"All"));
                     String startingNoStr = Utilities.getFormattedStartNumber(startingNo,startingNoSize);
                     String lastNoStr = "";
                     if(lastNo != null){
@@ -92,6 +107,7 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
                     data.put("id",id);
                     data.put("financialYearId",financialYearId);
                     data.put("financialYearName",financialYearName);
+                    data.put("departmentName",departmentName);
                     data.put("prefix",prefix);
                     data.put("startingNo",startingNoStr);
                     data.put("postfix",postfix);
@@ -101,6 +117,7 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
                 }
             }
             result_map.put("financialYearList",financialYearList);
+            result_map.put("departmentList",departmentList);
             result_map.put("autoNumberSchemeList",data_array);
         }catch (Exception ex){
             throw new RuntimeException(ex);
@@ -136,5 +153,25 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
         }catch (Exception ex){
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public String generateEmployeeAutoNumber(Long financialYearId, Long departmentId) {
+        String employeeAutoNo = null;
+        EmployeeAutoNumber employeeAutoNumber = employeeAutoNumberSchemeRepository.findEmployeeAutoNo(financialYearId, departmentId);
+        if (employeeAutoNumber == null) return null;
+        String prefix = employeeAutoNumber.getPrefix();
+        String postfix = employeeAutoNumber.getPostfix();
+        Integer lastNo = employeeAutoNumber.getLastNo();
+        Integer startingNo = employeeAutoNumber.getStartingNo();
+        Integer startingNoSize = employeeAutoNumber.getStartingNoSize();
+        if (lastNo == null) {
+            lastNo = startingNo;
+        } else {
+            lastNo = lastNo + 1;
+        }
+        String formattedNo = String.format("%0" + startingNoSize + "d", lastNo);
+        employeeAutoNo = prefix + formattedNo + postfix;
+        return employeeAutoNo;
     }
 }

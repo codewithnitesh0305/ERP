@@ -11,4 +11,5 @@ public interface EmployeeAutoNumberSchemeService {
     Map<String,Object> getAutoNumberScheme(Map<String,Object> param,HttpServletRequest request);
     ResponseEntity<?> updateAutoNumberSchemeStatus(Map<String,Object> param,HttpServletRequest request);
     ResponseEntity<?> deleteAutoNumberScheme(Map<String,Object> param,HttpServletRequest request);
+    public String generateEmployeeAutoNumber(Long financialYearId, Long departmentId);
 }

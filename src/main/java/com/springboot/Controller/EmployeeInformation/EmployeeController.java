@@ -1,14 +1,19 @@
 package com.springboot.Controller.EmployeeInformation;
 
+import com.springboot.Dto.EmployeeInformation.EmployeeDto;
 import com.springboot.Payload.Response;
+import com.springboot.Service.EmployeeInformation.Employees.EmployeeService;
 import com.springboot.Service.EmployeeInformation.Setup.EmployeeAutoNumberSchemeService;
 import com.springboot.Service.EmployeeInformation.Setup.EmployeeDocumentService;
 import com.springboot.Service.EmployeeInformation.Setup.EmployeeTypeService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -20,6 +25,7 @@ public class EmployeeController {
     private final EmployeeAutoNumberSchemeService employeeAutoNumberSchemeService;
     private final EmployeeTypeService employeeTypeService;
     private final EmployeeDocumentService employeeDocumentService;
+    private final EmployeeService employeeService;
 
     @PostMapping("/auto-number-scheme")
     public ResponseEntity<?> saveUpdateAutoNoScheme(@RequestBody Map<String,Object> param, HttpServletRequest request){
@@ -69,6 +75,26 @@ public class EmployeeController {
     @DeleteMapping("/employee-document")
     public ResponseEntity<?> deleteEmployeeDocument(@RequestParam Map<String,Object> param,HttpServletRequest request) {
         return employeeDocumentService.deleteEmployeeDocument(param, request);
+    }
+
+    @PostMapping(value = "/save-update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> saveUpdateEmployee(@RequestPart("employee") @Valid EmployeeDto dto, @RequestPart(required = false) Map<String, MultipartFile> files, HttpServletRequest request) {
+        return employeeService.saveUpdateEmployee(files, dto, request);
+    }
+
+    @GetMapping("/employee-list")
+    public ResponseEntity<?> getEmployeeList(@RequestParam Map<String,Object> param,HttpServletRequest request){
+        return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.getAllEmployees(param,request)),HttpStatus.OK);
+    }
+
+    @GetMapping("/employee")
+    public ResponseEntity<?> getEmployeeById(@RequestParam Map<String,Object> pram,HttpServletRequest request){
+        return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.employeeById(pram,request)),HttpStatus.OK);
+    }
+
+    @GetMapping("/employee-document-by-department")
+    public ResponseEntity<?> getEmployeeDocumentByDepartment(@RequestParam Map<String,Object> param,HttpServletRequest request){
+        return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.employeeDocumentByDepartment(param,request)),HttpStatus.OK);
     }
 
 }

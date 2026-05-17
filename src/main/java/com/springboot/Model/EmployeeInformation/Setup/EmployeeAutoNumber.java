@@ -18,6 +18,9 @@ public class EmployeeAutoNumber {
     @Column(name = "financial_year_id")
     private Long financialYearId;
 
+    @Column(name = "departmentId")
+    private Long departmentId;
+
     @Column(name = "prefix")
     private String prefix;
 

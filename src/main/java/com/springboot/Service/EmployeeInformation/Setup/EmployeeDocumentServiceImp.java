@@ -25,10 +25,9 @@ public class EmployeeDocumentServiceImp implements EmployeeDocumentService{
             Long id = Utilities.longValue(param.get("id"));
             String documentName = Utilities.stringValue(param.get("documentName"));
             Long departmentId = Utilities.longValue(param.get("departmentId"));
-            Boolean isAllowToUploadDocument = Utilities.booleanValue(param.get("isAllowToUploadDocument"));
-            Boolean isReminderRequired = Utilities.booleanValue(param.get("isReminderRequired"));
             Long authorizedEmployeeId = Utilities.longValue(param.get("authorizedEmployeeId"));
             Boolean isMandatory = Utilities.booleanValue(param.get("isMandatory"));
+            Boolean isExpiryDate = Utilities.booleanValue(param.get("isExpiryDate"));
 
             if(!documentName.isEmpty()) return ApiResponse.apiValidation("Document name is required.");
             if(departmentId == null || departmentId == -1) departmentId = null;
@@ -47,8 +46,7 @@ public class EmployeeDocumentServiceImp implements EmployeeDocumentService{
 
             employeeDocument.setName(documentName);
             employeeDocument.setDepartmentId(departmentId);
-            employeeDocument.setIsDocumentUpload(isAllowToUploadDocument);
-            employeeDocument.setIsReminderRequired(isReminderRequired);
+            employeeDocument.setIsExpiryDate(isExpiryDate);
             employeeDocument.setAuthorizedEmployeeId(authorizedEmployeeId);
             employeeDocument.setIsMandatory(isMandatory);
             employeeDocumentRepository.save(employeeDocument);

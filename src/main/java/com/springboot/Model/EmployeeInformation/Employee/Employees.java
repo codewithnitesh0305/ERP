@@ -129,7 +129,7 @@ public class Employees {
     private String spouseName;
 
     @Column(name = "spouse_contact_no_country_code")
-    private Long spouseContactNoCountryCode;
+    private String spouseContactNoCountryCode;
 
     @Column(name = "spouse_contact_no")
     private String spouseContactNo;
@@ -137,8 +137,8 @@ public class Employees {
     @Column(name = "spouse_email_id")
     private String spouseEmailId;
 
-    @Column(name = "is_permanent_same_as_correspondence")
-    private Boolean isPermanentSameAsCorrespondence;
+    @Column(name = "is_corresponding_same_as_permanent")
+    private Boolean isCorrespondenceSameAsPermanent;
 
     @Column(name = "permanent_address", columnDefinition = "TEXT")
     private String permanentAddress;
