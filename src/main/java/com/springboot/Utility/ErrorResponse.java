@@ -1,4 +1,4 @@
-package com.springboot.Payload;
+package com.springboot.Utility;
 
 import lombok.*;
 
