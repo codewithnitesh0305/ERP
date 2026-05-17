@@ -101,8 +101,9 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
                     String departmentName = Utilities.stringValue(activeDepartmentMap.getOrDefault(departmentId,"All"));
                     String startingNoStr = Utilities.getFormattedStartNumber(startingNo,startingNoSize);
                     String lastNoStr = "";
+                    String formattedNo = String.format("%0" + startingNoSize + "d", lastNo);
                     if(lastNo != null){
-                        lastNoStr = prefix + lastNo + postfix;
+                        lastNoStr = prefix + formattedNo + postfix;
                     }
                     data.put("id",id);
                     data.put("financialYearId",financialYearId);
@@ -170,6 +171,8 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
         } else {
             lastNo = lastNo + 1;
         }
+        employeeAutoNumber.setLastNo(lastNo);
+        employeeAutoNumberSchemeRepository.save(employeeAutoNumber);
         String formattedNo = String.format("%0" + startingNoSize + "d", lastNo);
         employeeAutoNo = prefix + formattedNo + postfix;
         return employeeAutoNo;
