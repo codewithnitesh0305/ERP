@@ -2,6 +2,7 @@ package com.springboot.Model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.springboot.Model.EmployeeInformation.Employee.Employees;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,5 +23,5 @@ public class RefreshToken {
     private Instant expiry;
     @OneToOne
     @JsonManagedReference
-    private Employee employee;
+    private Employees employee;
 }

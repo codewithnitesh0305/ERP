@@ -14,6 +14,9 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "role")
+    private String role;
+
     @Column(name = "user_id")
     private String userId;
 
@@ -22,6 +25,9 @@ public class Users {
 
     @Column(name = "employee_id")
     private Long employeeId;
+
+    @Column(name = "refresh_token")
+    private String refreshToken;
 
     @Column(name = "created_by")
     private Long createdBy;

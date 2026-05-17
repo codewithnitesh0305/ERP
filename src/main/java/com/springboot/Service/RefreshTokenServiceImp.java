@@ -1,9 +1,10 @@
 package com.springboot.Service;
 
-import com.springboot.Model.Employee;
 import com.springboot.Model.RefreshToken;
-import com.springboot.Repository.EmployeeRepository;
+import com.springboot.Model.User.Users;
 import com.springboot.Repository.RefreshTokenRepository;
+import com.springboot.Repository.User.UserRepository;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,28 +16,26 @@ public class RefreshTokenServiceImp implements  RefreshTokenService{
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
     @Autowired
-    public EmployeeRepository employeeRepository;
+    public UserRepository userRepository;
 
     public long refershTokenValidity = 5*60*60*10000;
 
     @Override
     public RefreshToken createRefershToken(String email) {
         // TODO Auto-generated method stub
-        Employee employee = employeeRepository.findByEmail(email);
-        RefreshToken refershToken = employee.getRefreshToken();
+        Users users = userRepository.findByUserId(email);
+        RefreshToken refershToken = new RefreshToken();
         //If refresh token is not generated than generate new refresh token.
         if(refershToken == null) {
             refershToken = RefreshToken.builder()
                     .refreshToken(UUID.randomUUID().toString())
                     .expiry(Instant.now().plusMillis(refershTokenValidity))
-                    .employee(employee)
                     .build();
         }
         //If refresh token is already generated than only expiry time will we updated.
         else {
             refershToken.setExpiry(Instant.now().plusMillis(refershTokenValidity));
         }
-        employee.setRefreshToken(refershToken);
         refreshTokenRepository.save(refershToken);
         return refershToken;
     }
