@@ -77,12 +77,12 @@ public class EmployeeController {
         return employeeDocumentService.deleteEmployeeDocument(param, request);
     }
 
-    @PostMapping(value = "/save-update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/employees", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> saveUpdateEmployee(@RequestPart("employee") @Valid EmployeeDto dto, @RequestPart(required = false) Map<String, MultipartFile> files, HttpServletRequest request) {
         return employeeService.saveUpdateEmployee(files, dto, request);
     }
 
-    @GetMapping("/employee-list")
+    @GetMapping("/employees")
     public ResponseEntity<?> getEmployeeList(@RequestParam Map<String,Object> param,HttpServletRequest request){
         return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.getAllEmployees(param,request)),HttpStatus.OK);
     }

@@ -24,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,7 +37,6 @@ public class EmployeeServiceImp implements EmployeeService{
 
     private final EmployeeRepository employeeRepository;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final EmployeeDocumentRepository employeeDocumentRepository;
     private final EmployeeDocumentSubmissionRepository employeeDocumentSubmissionRepository;
     private final FinancialYearRepository financialYearRepository;
@@ -171,7 +169,6 @@ public class EmployeeServiceImp implements EmployeeService{
                 Users user = new Users();
                 user.setUserId(dto.getEmailId());
                 user.setEmployeeId(employeeId);
-                user.setPassword(passwordEncoder.encode("HRNest@123"));
                 user.setCreatedBy(null);
                 user.setCreatedOn(Utilities.getCurrentDateTime());
                 userRepository.save(user);

@@ -4,9 +4,6 @@ import java.time.LocalDateTime;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -16,11 +13,13 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 
+import javax.naming.AuthenticationException;
+
 @RestControllerAdvice
 public class GlobalException {
 
     // Handle invalid credentials (BadCredentialsException)
-    @ExceptionHandler(BadCredentialsException.class)
+   /* @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, HttpServletRequest request) {
         ErrorResponse response = new ErrorResponse(
                 "Invalid email or password",
@@ -29,10 +28,10 @@ public class GlobalException {
                 request.getRequestURI()
         );
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-    }
+    }*/
 
     // Handle user not found (UsernameNotFoundException)
-    @ExceptionHandler(UsernameNotFoundException.class)
+    /*@ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponse> userNotFoundException(UsernameNotFoundException ex, HttpServletRequest request) {
         ErrorResponse response = new ErrorResponse(
                 "User not found",
@@ -41,7 +40,7 @@ public class GlobalException {
                 request.getRequestURI()
         );
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-    }
+    }*/
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> resourceNoFoundException(ResourceNotFoundException ex, HttpServletRequest request) {
