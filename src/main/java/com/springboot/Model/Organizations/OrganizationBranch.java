@@ -7,10 +7,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "organization", uniqueConstraints = {@UniqueConstraint(columnNames = {"organization_name","organization_code","affiliated_no"})})
+@Table(name = "organization_branch", uniqueConstraints = {@UniqueConstraint(columnNames = {"organization_name","organization_code","affiliated_no"})})
 @NoArgsConstructor
 @Data
-public class Organization {
+public class OrganizationBranch {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,8 +25,8 @@ public class Organization {
     @Column(name = "affiliated_no")
     private String affiliatedNo;
 
-    @Column(name = "mobile_code_id")
-    private Long mobileCodeId;
+    @Column(name = "contact_country_code")
+    private String contactCountryCode;
 
     @Column(name = "contact_no")
     private String contactNo;
@@ -50,28 +50,13 @@ public class Organization {
     private Long countryId;
 
     @Column(name = "state_id")
-    private Long state;
+    private Long stateId;
 
     @Column(name = "city_id")
     private Long cityId;
 
     @Column(name = "pin_code")
     private String pinCode;
-
-    @Column(name = "facebook_url")
-    private String facebookUrl;
-
-    @Column(name = "instagram_url")
-    private String instagramUrl;
-
-    @Column(name = "youtube_rul")
-    private String youtubeUrl;
-
-    @Column(name = "linkedin_url")
-    private String linkedinUtl;
-
-    @Column(name = "x_url")
-    private String xUrl;
 
     @Column(name = "is_active")
     private Boolean isActive;
@@ -80,11 +65,11 @@ public class Organization {
     private Long createdBy;
 
     @Column(name = "created_on")
-    private LocalDateTime createOn;
+    private String createOn;
 
     @Column(name = "updated_by")
     private Long updateBy;
 
     @Column(name = "updated_on")
-    private LocalDateTime updatedOn;
+    private String updatedOn;
 }

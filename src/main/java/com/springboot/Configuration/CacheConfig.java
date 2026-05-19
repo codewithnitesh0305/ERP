@@ -1,4 +1,4 @@
-package com.springboot.Config;
+package com.springboot.Configuration;
 
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
