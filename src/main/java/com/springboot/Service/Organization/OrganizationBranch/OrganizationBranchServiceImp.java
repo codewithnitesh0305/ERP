@@ -1,6 +1,6 @@
-package com.springboot.Service.Organization;
+package com.springboot.Service.Organization.OrganizationBranch;
 
-import com.springboot.Dto.Organization.OrganizationBranchRequestDto;
+import com.springboot.Dto.Organization.OrganizationBranchDTO.OrganizationBranchRequestDto;
 import com.springboot.Model.Organizations.OrganizationBranch;
 import com.springboot.Repository.CustomRepo.CustomRepo;
 import com.springboot.Repository.Organization.OrganizationBranchRepository;

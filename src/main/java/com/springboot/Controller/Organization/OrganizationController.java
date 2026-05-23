@@ -1,6 +1,6 @@
 package com.springboot.Controller.Organization;
 
-import com.springboot.Dto.Organization.OrganizationBranchRequestDto;
+import com.springboot.Dto.Organization.OrganizationBranchDTO.OrganizationBranchRequestDto;
 import com.springboot.Payload.Response;
 import com.springboot.Service.Organization.BloodGroup.BloodGroupService;
 import com.springboot.Service.Organization.Caste.CasteService;
@@ -8,7 +8,7 @@ import com.springboot.Service.Organization.Department.DepartmentService;
 import com.springboot.Service.Organization.Designaiton.DesignationService;
 import com.springboot.Service.Organization.FinancialYear.FinancialYearService;
 import com.springboot.Service.Organization.Gender.GenderService;
-import com.springboot.Service.Organization.OrganizationBranchService;
+import com.springboot.Service.Organization.OrganizationBranch.OrganizationBranchService;
 import com.springboot.Service.Organization.Profession.ProfessionService;
 import com.springboot.Service.Organization.Qualification.QualificationService;
 import com.springboot.Service.Organization.Religion.ReligionService;

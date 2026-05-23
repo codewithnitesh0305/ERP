@@ -1,4 +1,4 @@
-package com.springboot.Dto.Organization;
+package com.springboot.Dto.Organization.OrganizationBranchDTO;
 
 
 

@@ -28,10 +28,10 @@ public class EmployeeTypeServiceImp implements EmployeeTypeService{
             Long id = Utilities.longValue(parma.get("id"));
             String name = Utilities.stringValue(parma.get("name"));
 
-            if(name.isEmpty()) return ApiResponse.apiValidation("Blood Group is required.");
+            if(name.isEmpty()) return ApiResponse.apiValidation("Employee Type is required.");
 
             EmployeeType existingEmployeeType = employeeTypeRepository.findByName(name);
-            if(existingEmployeeType != null && existingEmployeeType.getName().equals(name) && !existingEmployeeType.getId().equals(id)) return ApiResponse.apiValidation("Employee already exist.");
+            if(existingEmployeeType != null && existingEmployeeType.getName().equals(name) && !existingEmployeeType.getId().equals(id)) return ApiResponse.apiValidation("Employee Type already exist.");
 
             EmployeeType employeeType = id == null ? new EmployeeType() : employeeTypeRepository.findById(id).orElseThrow(() -> new RuntimeException("Blood group not fount."));
             employeeType.setName(name);

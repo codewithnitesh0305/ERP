@@ -29,7 +29,7 @@ public class EmployeeDocumentServiceImp implements EmployeeDocumentService{
             Boolean isMandatory = Utilities.booleanValue(param.get("isMandatory"));
             Boolean isExpiryDate = Utilities.booleanValue(param.get("isExpiryDate"));
 
-            if(!documentName.isEmpty()) return ApiResponse.apiValidation("Document name is required.");
+            if(documentName.isEmpty()) return ApiResponse.apiValidation("Document name is required.");
             if(departmentId == null || departmentId == -1) departmentId = null;
 
             EmployeeDocument existingDocument =  employeeDocumentRepository.findByName(documentName);
@@ -78,10 +78,6 @@ public class EmployeeDocumentServiceImp implements EmployeeDocumentService{
                     }else{
                         departmentName = Utilities.stringValue(departmentMap.get(departmentId));
                     }
-                    Boolean isEmployeeAllowToUpload = Utilities.booleanValue(documentMap.get("is_document_upload"));
-                    String isEmployeeAllowToUploadStr = isEmployeeAllowToUpload ? "Yes" : "No";
-                    Boolean isReminderRequired = Utilities.booleanValue(documentMap.get("is_reminder_required"));
-                    String isReminderRequiredStr = isReminderRequired ? "Yes" : "No";
                     Long authorizedEmployeeId = Utilities.longValue(documentMap.get("authorized_employee_id"));
                     Boolean isMandatory = Utilities.booleanValue(documentMap.get("is_mandatory"));
                     String isMandatoryStr = isMandatory ? "Yes" : "No";
@@ -89,8 +85,6 @@ public class EmployeeDocumentServiceImp implements EmployeeDocumentService{
                     map.put("name", name);
                     map.put("departmentId", departmentId);
                     map.put("departmentName", departmentName);
-                    map.put("isEmployeeAllowToUpload", isEmployeeAllowToUploadStr);
-                    map.put("isReminderRequired", isReminderRequiredStr);
                     map.put("authorizedEmployeeId", authorizedEmployeeId);
                     map.put("isMandatory", isMandatoryStr);
                     documentList.add(map);
@@ -100,7 +94,7 @@ public class EmployeeDocumentServiceImp implements EmployeeDocumentService{
         }catch (Exception ex){
             throw new RuntimeException(ex);
         }
-        return null;
+        return result_map;
     }
 
     @Override

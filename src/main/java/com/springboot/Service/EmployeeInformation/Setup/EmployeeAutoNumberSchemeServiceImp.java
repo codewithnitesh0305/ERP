@@ -35,8 +35,8 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
             departmentId = departmentId == -1 ? null : departmentId;
 
             if(startingNo == null) return ApiResponse.apiValidation("Starting No. is required.");
-             EmployeeAutoNumber existingAutoNumberScheme =  employeeAutoNumberSchemeRepository.getEmployeeAutoNoSchemeByFinancialYearId(financialYearId);
-             if(existingAutoNumberScheme != null && !existingAutoNumberScheme.getId().equals(id)) return ApiResponse.apiValidation("Auto Number Scheme of this financial year already exist.");
+             EmployeeAutoNumber existingAutoNumberScheme =  employeeAutoNumberSchemeRepository.getEmployeeAutoNoSchemeByFinancialYearIdAndDepartmentId(financialYearId,departmentId);
+             if(existingAutoNumberScheme != null && !existingAutoNumberScheme.getId().equals(id)) return ApiResponse.apiValidation("Auto Number Scheme is already exist.");
 
              EmployeeAutoNumber employeeAutoNumber =  id == null ? new EmployeeAutoNumber() : employeeAutoNumberSchemeRepository.findById(id).orElseThrow(() -> new RuntimeException("Auto number scheme not founr."));
              if(id == null){
@@ -146,6 +146,7 @@ public class EmployeeAutoNumberSchemeServiceImp implements EmployeeAutoNumberSch
     public ResponseEntity<?> deleteAutoNumberScheme(Map<String, Object> param, HttpServletRequest request) {
         try{
             Long id =  Utilities.longValue(param.get("id"));
+            if(id == null) return ApiResponse.apiValidation("Kindly select at least on auto no. scheme");
             EmployeeAutoNumber employeeAutoNumber  = employeeAutoNumberSchemeRepository.findById(id).orElseThrow(() -> new RuntimeException("Auto number scheme not fount."));
             employeeAutoNumber.setDeletedBy(null);
             employeeAutoNumber.setDeletedOn(Utilities.getCurrentDateTime());
