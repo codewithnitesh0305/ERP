@@ -1,6 +1,6 @@
-package com.springboot.Service.Organization;
+package com.springboot.Service.Organization.OrganizationBranch;
 
-import com.springboot.Dto.Organization.OrganizationBranchRequestDto;
+import com.springboot.Dto.Organization.OrganizationBranchDTO.OrganizationBranchRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
