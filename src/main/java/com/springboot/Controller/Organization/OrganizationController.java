@@ -1,6 +1,9 @@
 package com.springboot.Controller.Organization;
 
 import com.springboot.Dto.Organization.OrganizationBranchDTO.OrganizationBranchRequestDto;
+import com.springboot.Dto.Organization.OrganizationDTO.OrganizationRequestDto;
+import com.springboot.Dto.Organization.OrganizationDTO.OrganizationResponseDto;
+import com.springboot.Model.Organizations.Organization;
 import com.springboot.Payload.Response;
 import com.springboot.Service.Organization.BloodGroup.BloodGroupService;
 import com.springboot.Service.Organization.Caste.CasteService;
@@ -8,6 +11,7 @@ import com.springboot.Service.Organization.Department.DepartmentService;
 import com.springboot.Service.Organization.Designaiton.DesignationService;
 import com.springboot.Service.Organization.FinancialYear.FinancialYearService;
 import com.springboot.Service.Organization.Gender.GenderService;
+import com.springboot.Service.Organization.Organization.OrganizationService;
 import com.springboot.Service.Organization.OrganizationBranch.OrganizationBranchService;
 import com.springboot.Service.Organization.Profession.ProfessionService;
 import com.springboot.Service.Organization.Qualification.QualificationService;
@@ -21,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -28,7 +33,8 @@ import java.util.Map;
 @AllArgsConstructor
 public class OrganizationController {
 
-    private final OrganizationBranchService organizationService;
+    private final OrganizationService organizationService;
+    private final OrganizationBranchService organizationBranchService;
     private final DepartmentService departmentService;
     private final DesignationService designationService;
     private final BloodGroupService bloodGroupService;
@@ -40,14 +46,24 @@ public class OrganizationController {
     private final ProfessionService professionService;
     private final FinancialYearService financialYearService;
 
+    @PostMapping("/organization")
+    public ResponseEntity<?> saveUpdateOrganization(@RequestPart(required = false) MultipartFile file, @Valid @RequestPart OrganizationRequestDto organizationRequestDto, HttpServletRequest request) throws IOException {
+        return organizationService.saveUpdateOrganization(file,organizationRequestDto,request);
+    }
+
+    @GetMapping("/organization")
+    public ResponseEntity<?> getOrganizationDetails(@RequestParam Long organizationId,HttpServletRequest request) {
+        return new ResponseEntity<>(new Response<>("Success",organizationService.getOrganizationDetails(organizationId,request)),HttpStatus.OK);
+    }
+
     @PostMapping("/organization-branch")
     public ResponseEntity<?> saveUpdateOrganizationBranch(@RequestPart(required = false) MultipartFile file, @Valid @RequestPart OrganizationBranchRequestDto organizationBranchRequestDto, HttpServletRequest request) {
-        return organizationService.saveUpdateOrganizationBranch(file,organizationBranchRequestDto,request);
+        return organizationBranchService.saveUpdateOrganizationBranch(file,organizationBranchRequestDto,request);
     }
 
     @GetMapping("/organization-branch")
-    public ResponseEntity<?> getOrganizationDetails( @RequestParam Map<String, Object> param,HttpServletRequest request) {
-        return new ResponseEntity<>(new Response<>("Success",organizationService.getOrganizationDetails(param,request)),HttpStatus.OK);
+    public ResponseEntity<?> getOrganizationBranchDetails( @RequestParam Map<String, Object> param,HttpServletRequest request) {
+        return new ResponseEntity<>(new Response<>("Success",organizationBranchService.getOrganizationDetails(param,request)),HttpStatus.OK);
     }
 
     @PostMapping("/department")

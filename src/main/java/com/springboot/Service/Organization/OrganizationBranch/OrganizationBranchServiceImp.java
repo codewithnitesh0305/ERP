@@ -53,7 +53,7 @@ public class OrganizationBranchServiceImp implements OrganizationBranchService {
             organization.setAffiliatedNo(dto.getAffiliatedNo());
             organization.setContactCountryCode(dto.getContactCountryCode());
             organization.setContactNo(dto.getContactNo());
-            organization.setOrganizationEmailId(dto.getOrganizationEmailId());
+            organization.setEmailId(dto.getEmailId());
             organization.setCurrencyId(dto.getCurrencyId());
 
             organization.setAddress(dto.getAddress());

@@ -12,17 +12,17 @@ public class OrganizationBranchRequestDto {
     private Long id;
     private String organizationLogo;
     private Boolean isLogoChange;
-    @NotEmpty(message = "Organization name is required.")
+    @NotEmpty(message = "Name is required.")
     private String name;
-    @NotEmpty(message = "Organization code is required.")
+    @NotEmpty(message = "Code is required.")
     private String organizationCode;
-    @NotEmpty(message = "Organization affiliation no. is required.")
+    @NotEmpty(message = "Affiliation No. is required.")
     private String affiliatedNo;
     private String contactCountryCode;
-    @NotEmpty(message = "Organization contact no. is required.")
+    @NotEmpty(message = "Contact no. is required.")
     private String contactNo;
-    @NotEmpty(message = "Organization emailId is required.")
-    private String organizationEmailId;
+    @NotEmpty(message = "Email ID is required.")
+    private String emailId;
     @NotNull(message = "Kindly select currency.")
     private Long currencyId;
 
