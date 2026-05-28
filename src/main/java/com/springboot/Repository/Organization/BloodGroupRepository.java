@@ -16,4 +16,7 @@ public interface BloodGroupRepository extends JpaRepository<BloodGroup,Long> {
 
     @Query(nativeQuery = true,value = "Select bg.id,bg.name,bg.is_active from organization_blood_group bg where (:fts IS NULL OR bg.name LIKE :fts)")
     List<Map<String,Object>> getAllBloodGroup(@Param("fts") String fts);
+
+    @Query(nativeQuery = true,value = "Select name from organization_blood_group where id = :id")
+    String findNameById(@Param("id") Long id);
 }

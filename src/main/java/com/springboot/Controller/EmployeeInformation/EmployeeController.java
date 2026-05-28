@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -92,9 +93,23 @@ public class EmployeeController {
         return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.employeeById(pram,request)),HttpStatus.OK);
     }
 
+    @GetMapping("/employee-preview")
+    public ResponseEntity<?> employeePreview(@RequestParam Map<String,Object> pram,HttpServletRequest request){
+        return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.employeePreview(pram,request)),HttpStatus.OK);
+    }
+
     @GetMapping("/employee-document-by-department")
     public ResponseEntity<?> getEmployeeDocumentByDepartment(@RequestParam Map<String,Object> param,HttpServletRequest request){
         return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.employeeDocumentByDepartment(param,request)),HttpStatus.OK);
+    }
+
+    @PostMapping("/resign-employee")
+    public ResponseEntity<?> saveUpdateResignEmployee(@RequestParam MultipartFile file, @RequestParam Map<String,Object> param,HttpServletRequest request) throws IOException {
+        return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.resignEmployee(file, param,request)),HttpStatus.OK);
+    }
+    @GetMapping("/resign-employee")
+    public ResponseEntity<?> resignEmployeeList(@RequestParam Map<String,Object> param,HttpServletRequest request){
+        return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.resignEmployeeList(param,request)),HttpStatus.OK);
     }
 
 }

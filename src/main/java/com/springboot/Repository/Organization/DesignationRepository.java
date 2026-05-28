@@ -19,4 +19,7 @@ public interface DesignationRepository extends JpaRepository<Designation,Long> {
 
     @Query(nativeQuery = true,value = "SELECT deg.id as value,deg.name as label from organization_designation deg where deg.is_active = true")
     List<Map<String,Object>> getAcitveDesignationList();
+
+    @Query(nativeQuery = true,value = "Select name from organization_designation where id = :id")
+    String findNameById(@Param("id") Long id);
 }

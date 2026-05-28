@@ -3,6 +3,7 @@ package com.springboot.Repository.Organization;
 import com.springboot.Model.Organizations.Caste;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,4 +16,7 @@ public interface CasteRepository extends JpaRepository<Caste,Long> {
 
     @Query(nativeQuery = true,value = "Select ct.id,ct.name,ct.is_active from organization_caste ct where (:fts IS NULL OR ct.name LIKE :fts)")
     List<Map<String,Object>> getAllCaste(String fts);
+
+    @Query(nativeQuery = true,value = "Select name from organization_caste where id = :id")
+    String findNameById(@Param("id") Long id);
 }

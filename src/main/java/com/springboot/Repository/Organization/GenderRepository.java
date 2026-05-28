@@ -19,4 +19,7 @@ public interface GenderRepository extends JpaRepository<Gender,Long> {
 
     @Query(nativeQuery = true, value = "SELECT gen.id as value,gen.name as label from organization_gender where gen.is_active = true")
     List<Map<String,Object>> getActiveGenderList();
+
+    @Query(nativeQuery = true,value = "Select name from organization_gender where id = :id")
+    String findNameById(@Param("id") Long id);
 }

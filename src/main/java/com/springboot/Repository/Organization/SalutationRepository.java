@@ -19,4 +19,7 @@ public interface SalutationRepository extends JpaRepository<Salutation,Long> {
 
     @Query(nativeQuery = true,value = "SELECT s.id as value,s.name as label FROM organization_salutation s where  s.is_active = true")
     List<Map<String,Object>> getActiveSalutationList();
+
+    @Query(nativeQuery = true, value = "Select name from organization_salutation where id = :id")
+    String findNameById(@Param("id") Long id);
 }

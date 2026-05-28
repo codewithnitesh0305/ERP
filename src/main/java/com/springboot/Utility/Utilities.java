@@ -149,5 +149,11 @@ public class Utilities {
         return jsonObject.optString("servingUrl");
     }
 
+    public static Long currentEmployeeId(){
+        return null;
+    }
+    public static Long currentBranchId(){
+        return null;
+    }
 
 }

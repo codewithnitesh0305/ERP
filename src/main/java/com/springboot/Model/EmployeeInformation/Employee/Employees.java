@@ -14,8 +14,8 @@ public class Employees {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "school_id")
-    private Long schoolId;
+    @Column(name = "branch_id")
+    private Long branchId;
 
     @Column(name = "financial_year_id")
     private Long financialYearId;
@@ -188,11 +188,14 @@ public class Employees {
     @Column(name = "resign_date")
     private String resignDate;
 
+    @Column(name = "releasing_date")
+    private String releasingDate;
+
     @Column(name = "resign_remarks")
-    private String resign_remarks;
+    private String resignRemarks;
 
     @Column(name = "resign_document")
-    private String resign_document;
+    private String resignDocument;
 
     @Column(name = "created_by")
     private Long createdBy;

@@ -18,4 +18,7 @@ public interface DepartmentRepository extends JpaRepository<Department,Long> {
 
     @Query(nativeQuery = true,value = "SELECT dept.id as value, dept.name as label FROM organization_department dept where dept.is_active = true")
     List<Map<String,Object>> getActiveDepartmentLIst();
+
+    @Query(nativeQuery = true,value = "Select name from organization_department where id = :id")
+    String findNameById(@Param("id") Long id);
 }

@@ -76,8 +76,6 @@ public class CustomRepo {
         return result_map;
     }
 
-
-
     public List<Map<String,Object>> getAllDesignationList(){
         String query = "Select deg.id as value, deg.name as label from organization_designation deg";
         return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
@@ -97,6 +95,7 @@ public class CustomRepo {
         String query = "Select empTyp.id as value, empTyp.name as label from employee_type empTyp";
         return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
     }
+
 
     public List<Map<String,Object>> customizeDataList(String query, String filter,String groupBy,String orderBy){
         filter = Utilities.filterValue(filter);

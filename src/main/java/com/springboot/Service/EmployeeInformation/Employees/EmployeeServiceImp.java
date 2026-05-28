@@ -6,6 +6,7 @@ import com.springboot.Exception.ValidationException;
 import com.springboot.Model.EmployeeInformation.Employee.EmployeeDocumentSubmission;
 import com.springboot.Model.EmployeeInformation.Employee.Employees;
 import com.springboot.Model.EmployeeInformation.Setup.EmployeeDocument;
+import com.springboot.Model.Organizations.Salutation;
 import com.springboot.Model.User.Users;
 import com.springboot.Repository.CustomRepo.CustomRepo;
 import com.springboot.Repository.EmployeeInformation.Employees.EmployeeDocumentSubmissionRepository;
@@ -47,6 +48,9 @@ public class EmployeeServiceImp implements EmployeeService{
     private final DesignationRepository designationRepository;
     private final EmployeeTypeRepository employeeTypeRepository;
     private final EmployeeAutoNumberSchemeService employeeAutoNumberSchemeService;
+    private final BloodGroupRepository bloodGroupRepository;
+    private final ReligionRepository religionRepository;
+    private final CasteRepository casteRepository;
 
     @Override
     public ResponseEntity<?> saveUpdateEmployee(Map<String, MultipartFile> fileMap, EmployeeDto dto, HttpServletRequest request) {
@@ -283,7 +287,7 @@ public class EmployeeServiceImp implements EmployeeService{
             if(financialYearId == null){
                 financialYearId = financialYearRepository.findIdByIsActiveTrue();
             }
-            StringBuilder filter = new StringBuilder();
+            StringBuilder filter = new StringBuilder("emp.releasing_date <= CURRENT_DATE()");
             if(employeeTypeId != null){
                 filter.append(" emp.employee_type_id = ").append(employeeTypeId);
             }
@@ -369,6 +373,101 @@ public class EmployeeServiceImp implements EmployeeService{
     }
 
     @Override
+    public Map<String, Object> employeePreview(Map<String, Object> param, HttpServletRequest request) {
+        Long employeeId = Utilities.longValue(param.get("id"));
+        if (employeeId == null) {
+            throw new RuntimeException("Kindly select at least one employee.");
+        }
+        Map<String, Object> employeePreviewMap = new LinkedHashMap<>();
+        Map<Long, String> salutationMap = salutationRepository.findAll().stream().collect(Collectors.toMap(Salutation::getId, Salutation::getName));
+        List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_PREVIEW_QUERY, "emp.id = " + employeeId, null, "emp.created_on desc");
+        if (Utilities.isCollectionNotEmpty(employeeMapList)) {
+            Map<String, Object> employeeMap = employeeMapList.get(0);
+            employeePreviewMap.put("id", Utilities.longValue(employeeMap.get("id")));
+            employeePreviewMap.put("employeeCode", Utilities.stringValue(employeeMap.get("employeeCode")));
+            employeePreviewMap.put("employeeProfileImage", Utilities.getServingUrlFromImageString(Utilities.stringValue(employeeMap.get("employeeProfileImage"))));
+            String employeeName = Utilities.stringValue(employeeMap.get("fullName"));
+            String employeeSalutation = Utilities.stringValue(salutationMap.get(Utilities.longValue(employeeMap.get("salutationId"))));
+            employeeName = employeeName.isEmpty() ? "" : employeeSalutation.isEmpty() ? employeeName : employeeSalutation + " " + employeeName;
+            employeePreviewMap.put("employeeName", employeeName);
+            String employeeContactNo = Utilities.stringValue(employeeMap.get("contactNo"));
+            String employeeContactCode = Utilities.stringValue(employeeMap.get("contactNoCountryCode"));
+            employeeContactNo = employeeContactNo.isEmpty() ? "" : employeeContactCode.isEmpty() ? employeeContactNo : employeeContactCode + "-" + employeeContactNo;
+            employeePreviewMap.put("employeeContactNo", employeeContactNo);
+            employeePreviewMap.put("emailId", Utilities.stringValue(employeeMap.get("emailId")));
+            Long genderId = Utilities.longValue(employeeMap.get("genderId"));
+            if (genderId != null) {employeePreviewMap.put("gender", Utilities.stringValue(genderRepository.findNameById(genderId)));}
+            employeePreviewMap.put("dateOfBirth", Utilities.getIndianDateFormatFromUSDate(Utilities.stringValue(employeeMap.get("dateOfBirth"))));
+            Long bloodGroupId = Utilities.longValue(employeeMap.get("bloodGroupId"));
+            if (bloodGroupId != null) employeePreviewMap.put("bloodGroup", Utilities.stringValue(bloodGroupRepository.findNameById(bloodGroupId)));
+            Long maritalStatusId = Utilities.longValue(employeeMap.get("martialStatusId"));
+            if (maritalStatusId != null) employeePreviewMap.put("maritalStatus", null);
+            employeePreviewMap.put("nationality",Utilities.stringValue(employeeMap.get("nationalityName")));
+            Long religionId = Utilities.longValue(employeeMap.get("religionId"));
+            if (religionId != null) employeePreviewMap.put("religion", Utilities.stringValue(religionRepository.findNameById(religionId)));
+            Long casteId = Utilities.longValue(employeeMap.get("casteId"));
+            if (casteId != null) employeePreviewMap.put("caste", Utilities.stringValue(casteRepository.findNameById(casteId)));
+            Long departmentId = Utilities.longValue(employeeMap.get("departmentId"));
+            if (departmentId != null) employeePreviewMap.put("department", Utilities.stringValue(departmentRepository.findNameById(departmentId)));
+            Long designationId = Utilities.longValue(employeeMap.get("designationId"));
+            if (designationId != null) employeePreviewMap.put("designation", Utilities.stringValue(designationRepository.findNameById(designationId)));
+            employeePreviewMap.put("dateOfJoining", Utilities.getIndianDateFormatFromUSDate(Utilities.stringValue(employeeMap.get("dateOfJoining"))));
+            employeePreviewMap.put("uanNo", Utilities.stringValue(employeeMap.get("uanNo")));
+
+            // Father Name
+            String fatherName = Utilities.stringValue(employeeMap.get("fatherName"));
+            String fatherEmailId = Utilities.stringValue(employeeMap.get("fatherEmailId"));
+            String fatherContactCode = Utilities.stringValue(employeeMap.get("fatherContactCode"));
+            String fatherContactNo = Utilities.stringValue(employeeMap.get("fatherContactNo"));
+            String fatherSalutation = Utilities.stringValue(salutationMap.get(Utilities.longValue(employeeMap.get("fatherSalutationId"))));
+            fatherName = fatherName.isEmpty() ? "" : fatherSalutation.isEmpty() ? fatherName : fatherSalutation + " " + fatherName;
+            fatherContactNo = fatherContactNo.isEmpty() ? "" : fatherContactCode.isEmpty() ? fatherContactNo : fatherContactCode+"-"+fatherContactNo;
+            employeePreviewMap.put("fatherName", fatherName);
+            employeePreviewMap.put("fatherEmailId", fatherEmailId);
+            employeePreviewMap.put("fatherContactNo", fatherContactNo);
+
+            // Mother Name
+            String motherName = Utilities.stringValue(employeeMap.get("motherName"));
+            String motherEmailId = Utilities.stringValue(employeeMap.get("motherEmailId"));
+            String motherContactCode = Utilities.stringValue(employeeMap.get("motherContactCode"));
+            String motherContactNo = Utilities.stringValue(employeeMap.get("motherContactNo"));
+            String motherSalutation = Utilities.stringValue(salutationMap.get(Utilities.longValue(employeeMap.get("motherSalutationId"))));
+            motherName = motherName.isEmpty() ? "" : motherSalutation.isEmpty() ? motherName : motherSalutation + " " + motherName;
+            motherContactNo = motherContactNo.isEmpty() ? "" : motherContactCode.isEmpty() ? motherContactNo : motherContactCode+"-"+motherContactNo;
+            employeePreviewMap.put("motherName", motherName);
+            employeePreviewMap.put("motherContactNo", motherContactNo);
+            employeePreviewMap.put("motherEmailId", motherEmailId);
+
+            // Spouse Name
+            String spouseName = Utilities.stringValue(employeeMap.get("spouseName"));
+            String spouseEmailId = Utilities.stringValue(employeeMap.get("spouseEmailId"));
+            String spouseContactCode = Utilities.stringValue(employeeMap.get("spouseContactCode"));
+            String spouseContactNo = Utilities.stringValue(employeeMap.get("spouseContactNo"));
+            String spouseSalutation = Utilities.stringValue(salutationMap.get(Utilities.longValue(employeeMap.get("spouseSalutationId"))));
+            spouseName = spouseName.isEmpty() ? "" : spouseSalutation.isEmpty() ? spouseName : spouseSalutation + " " + spouseName;
+            spouseContactNo = spouseContactNo.isEmpty() ? "" : spouseContactCode.isEmpty() ? spouseContactNo : spouseContactCode+"-"+spouseContactNo;
+            employeePreviewMap.put("spouseName", spouseName);
+            employeePreviewMap.put("spouseEmailId", spouseEmailId);
+            employeePreviewMap.put("spouseContactNo", spouseContactNo);
+
+            // Permanent Address
+            employeePreviewMap.put("permanentAddress",Utilities.stringValue(employeeMap.get("permanentAddress")));
+            employeePreviewMap.put("permanentCountry",Utilities.stringValue(employeeMap.get("permanentCountry")));
+            employeePreviewMap.put("permanentState",Utilities.stringValue(employeeMap.get("permanentState")));
+            employeePreviewMap.put("permanentCity",Utilities.stringValue(employeeMap.get("permanentCity")));
+            employeePreviewMap.put("permanentPinCode",Utilities.stringValue(employeeMap.get("permanentPinCode")));
+
+            employeePreviewMap.put("correspondingAddress",Utilities.stringValue(employeeMap.get("correspondingAddress")));
+            employeePreviewMap.put("correspondingCountry",Utilities.stringValue(employeeMap.get("correspondingCountry")));
+            employeePreviewMap.put("correspondingState",Utilities.stringValue(employeeMap.get("correspondingState")));
+            employeePreviewMap.put("correspondingCity",Utilities.stringValue(employeeMap.get("correspondingCity")));
+            employeePreviewMap.put("correspondingPinCode",Utilities.stringValue(employeeMap.get("correspondingPinCode")));
+        }
+
+        return employeePreviewMap;
+    }
+
+    @Override
     public Map<String, Object> employeeDocumentByDepartment(Map<String, Object> param, HttpServletRequest request) {
         Map<String,Object> resultMap = new LinkedHashMap<>();
         List<Map<String,Object>> employeeDocumentsList = new ArrayList<>();
@@ -385,6 +484,62 @@ public class EmployeeServiceImp implements EmployeeService{
             }
         }
         resultMap.put("employeeDocumentsList",employeeDocumentsList);
+        return resultMap;
+    }
+
+    @Override
+    public ResponseEntity<?> resignEmployee(MultipartFile file, Map<String, Object> param, HttpServletRequest request) throws IOException {
+        Long employeeId = Utilities.longValue(param.get("id"));
+        Boolean isAttachmentChange = Utilities.booleanValue(param.get("isAttachmentChange"));
+        String resignDate = Utilities.getUSDateFromIndianDate(Utilities.stringValue(param.get("resignDate")));
+        String releasingDate = Utilities.getUSDateFromIndianDate(Utilities.stringValue(param.get("releasingDate")));
+        Employees employees = employeeRepository.findById(employeeId).orElseThrow(() -> new ResourceNotFoundException("Employee not found."));
+        String reason = Utilities.stringValue(param.get("reason"));
+        if(isAttachmentChange){
+            String uploadFile = FileManager.uploadFile(file);
+            String existingAttachment = Utilities.stringValue(employees.getResignDocument());
+            if(!existingAttachment.isEmpty()){
+                FileManager.deleteFile(existingAttachment);
+            }
+            if(uploadFile != null && !uploadFile.isEmpty()){
+                employees.setResignDocument(uploadFile);
+            }else {
+                employees.setResignDocument(null);
+            }
+        }
+        employees.setResignDate(resignDate);
+        employees.setResignDocument(releasingDate);
+        employees.setResignRemarks(reason);
+        employeeRepository.save(employees);
+        return ApiResponse.apiSuccess();
+    }
+
+    @Override
+    public Map<String, Object> resignEmployeeList(Map<String, Object> param, HttpServletRequest request) {
+        String fts = Utilities.stringValue(param.get("fts"));
+        Long currentBranchId = Utilities.currentBranchId();
+        StringBuilder filter = new StringBuilder();
+
+        Map<String,Object> resultMap = new LinkedHashMap<>();
+        List<Map<String,Object>> resignEmployeeList = new ArrayList<>();
+        Map<String, Object> departmentMap = customRepo.getAllDepartment();
+        Map<String, Object> designationMap = customRepo.getAllDesignation();
+        List<Map<String, Object>> inActiveEmployeeList = customRepo.customizeDataList(EmployeeStaticQuery.INACTIVE_EMPLOYEE_QUERY, filter.toString(), null, "emp.resign_date desc");
+        if(Utilities.isCollectionNotEmpty(inActiveEmployeeList)){
+            for(Map<String,Object> inActiveEmployeeMap : inActiveEmployeeList){
+                Map<String,Object> dataMap = new LinkedHashMap<>();
+                dataMap.put("id",Utilities.longValue(inActiveEmployeeMap.get("id")));
+                dataMap.put("employeeName",Utilities.stringValue(inActiveEmployeeMap.get("employeeName")));
+                dataMap.put("employeeCode",Utilities.stringValue(inActiveEmployeeMap.get("employeeCode")));
+                dataMap.put("employeeProfileImage",Utilities.getServingUrlFromImageString(Utilities.stringValue(inActiveEmployeeMap.get("employeeProfileImage"))));
+                dataMap.put("department",Utilities.stringValue(departmentMap.get(Utilities.stringValue(inActiveEmployeeMap.get("departmentId")))));
+                dataMap.put("designation",Utilities.stringValue(designationMap.get(Utilities.stringValue(inActiveEmployeeMap.get("designationId")))));
+                dataMap.put("releasingDate",Utilities.getIndianDateFormatFromUSDate(Utilities.stringValue(inActiveEmployeeMap.get("releasingDate"))));
+                dataMap.put("resignDate",Utilities.getIndianDateFormatFromUSDate(Utilities.stringValue(inActiveEmployeeMap.get("resignDate"))));
+                resignEmployeeList.add(dataMap);
+            }
+        }
+        resultMap.put("resignEmployeeList",resignEmployeeList);
         return resultMap;
     }
 }
