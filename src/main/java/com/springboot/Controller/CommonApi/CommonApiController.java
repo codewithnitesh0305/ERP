@@ -1,6 +1,6 @@
 package com.springboot.Controller.CommonApi;
 
-import com.springboot.Payload.Response;
+import com.springboot.Utility.Response;
 import com.springboot.Service.Common.CommonService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

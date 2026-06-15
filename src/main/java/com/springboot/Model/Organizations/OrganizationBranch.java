@@ -16,6 +16,9 @@ public class OrganizationBranch {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "organization_id")
+    private Long organizationId;
+
     @Column(name = "organization_name")
     private String name;
 
@@ -37,8 +40,8 @@ public class OrganizationBranch {
     @Column(name = "currency_id")
     private Long currencyId;
 
-    @Column(name = "organization_logo")
-    private String organizationLogo;
+    @Column(name = "branch_logo")
+    private String  branchLogo;
 
     @Column(name = "website_url")
     private String websiteUrl;

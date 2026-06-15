@@ -21,4 +21,5 @@ public interface OrganizationBranchRepository extends JpaRepository<Organization
             From organization_branch org where id = :organizationId;
             """)
     List<Map<String,Object>> getOrganizationDetails(@Param("organizationId") Long organizationId);
+
 }

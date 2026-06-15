@@ -1,7 +1,7 @@
 package com.springboot.Controller.EmployeeInformation;
 
 import com.springboot.Dto.EmployeeInformation.EmployeeDto;
-import com.springboot.Payload.Response;
+import com.springboot.Utility.Response;
 import com.springboot.Service.EmployeeInformation.Employees.EmployeeService;
 import com.springboot.Service.EmployeeInformation.Setup.EmployeeAutoNumberSchemeService;
 import com.springboot.Service.EmployeeInformation.Setup.EmployeeDocumentService;

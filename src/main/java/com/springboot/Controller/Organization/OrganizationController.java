@@ -2,9 +2,7 @@ package com.springboot.Controller.Organization;
 
 import com.springboot.Dto.Organization.OrganizationBranchDTO.OrganizationBranchRequestDto;
 import com.springboot.Dto.Organization.OrganizationDTO.OrganizationRequestDto;
-import com.springboot.Dto.Organization.OrganizationDTO.OrganizationResponseDto;
-import com.springboot.Model.Organizations.Organization;
-import com.springboot.Payload.Response;
+import com.springboot.Utility.Response;
 import com.springboot.Service.Organization.BloodGroup.BloodGroupService;
 import com.springboot.Service.Organization.Caste.CasteService;
 import com.springboot.Service.Organization.Department.DepartmentService;

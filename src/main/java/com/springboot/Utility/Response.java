@@ -1,4 +1,4 @@
-package com.springboot.Payload;
+package com.springboot.Utility;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

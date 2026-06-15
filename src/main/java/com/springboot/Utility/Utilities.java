@@ -156,4 +156,11 @@ public class Utilities {
         return null;
     }
 
+    public static String generateOtp(){
+        return String.valueOf((int) (Math.random() * 900000) + 100000);
+    }
+    public static String referenceNo(){
+        return UUID.randomUUID().toString().replace("-","").substring(0,10);
+    }
+
 }

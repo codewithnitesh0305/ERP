@@ -81,9 +81,12 @@ public class EmployeeServiceImp implements EmployeeService{
                     if(existingProfileImage != null && !existingProfileImage.isEmpty()){
                         FileManager.deleteFile(existingProfileImage);
                     }
-                    employees.setEmployeeProfileImage(employeeProfileImage);
                 }else{
-                    employees.setEmployeeProfileImage(employeeProfileImage);
+                    if(employeeProfileImage != null && !employeeProfileImage.isEmpty()){
+                        employees.setEmployeeProfileImage(employeeProfileImage);
+                    }else{
+                        employees.setEmployeeProfileImage(null);
+                    }
                 }
             }
             employees.setEmployeeCode(employeeCode);
@@ -122,21 +125,21 @@ public class EmployeeServiceImp implements EmployeeService{
             // Father Details
             employees.setFatherSalutationId(dto.getFatherSalutationId());
             employees.setFatherName(dto.getFatherName());
-            employees.setFatherContactNoCountryCode(dto.getFatherContactNoCountryCode());
+            employees.setFatherContactNoCountryCode(fatherContactCode);
             employees.setFatherContactNo(dto.getFatherContactNo());
             employees.setFatherEmailId(dto.getFatherEmailId());
 
             // Mother Details
             employees.setMotherSalutationId(dto.getMotherSalutationId());
             employees.setMotherName(dto.getMotherName());
-            employees.setMotherContactNoCountryCode(dto.getMotherContactNoCountryCode());
+            employees.setMotherContactNoCountryCode(motherContactCode);
             employees.setMotherContactNo(dto.getMotherContactNo());
             employees.setMotherEmailId(dto.getMotherEmailId());
 
             // Spouse Details
             employees.setSpouseSalutationId(dto.getSpouseSalutationId());
             employees.setSpouseName(dto.getSpouseName());
-            employees.setSpouseContactNoCountryCode(dto.getSpouseContactNoCountryCode());
+            employees.setSpouseContactNoCountryCode(spouseContactCode);
             employees.setSpouseContactNo(dto.getSpouseContactNo());
             employees.setSpouseEmailId(dto.getSpouseEmailId());
 
@@ -171,7 +174,7 @@ public class EmployeeServiceImp implements EmployeeService{
             processedDocument(fileMap, dto, employeeId, request);
             if (dto.getId() == null) {
                 Users user = new Users();
-                user.setUserId(dto.getEmailId());
+                user.setEmailId(dto.getEmailId());
                 user.setEmployeeId(employeeId);
                 user.setCreatedBy(null);
                 user.setCreatedOn(Utilities.getCurrentDateTime());
