@@ -10,7 +10,7 @@ import java.io.IOException;
 
 public interface OrganizationService {
 
-    ResponseEntity<?> saveUpdateOrganization(MultipartFile file, OrganizationRequestDto organizationRequestDto, HttpServletRequest request) throws IOException;
+    ResponseEntity<?> saveUpdateOrganization(OrganizationRequestDto organizationRequestDto, HttpServletRequest request) throws IOException;
     OrganizationResponseDto getOrganizationDetails(Long organizationId,HttpServletRequest request);
 
 }

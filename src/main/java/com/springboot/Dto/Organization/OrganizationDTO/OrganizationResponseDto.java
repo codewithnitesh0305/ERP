@@ -21,7 +21,7 @@ public class OrganizationResponseDto {
     private Long countryId;
     private Long stateId;
     private Long cityId;
-    private String pinCode;
+    private Long pinCode;
     private String faceBookUrl;
     private String instagramUrl;
     private String youTubeUrl;

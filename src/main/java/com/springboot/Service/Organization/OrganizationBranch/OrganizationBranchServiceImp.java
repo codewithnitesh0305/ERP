@@ -36,15 +36,15 @@ public class OrganizationBranchServiceImp implements OrganizationBranchService {
 
             OrganizationBranch organization = organizationId != null ? organizationRepository.findById(organizationId).orElseThrow(() -> new RuntimeException("Organization not found.")) : new OrganizationBranch();
             if (Boolean.TRUE.equals(dto.getIsLogoChange())) {
-                String existingLogo = Utilities.stringValue(organization.getOrganizationLogo());
+                String existingLogo = Utilities.stringValue(organization.getBranchLogo());
                 if (!existingLogo.isEmpty()) {
                     FileManager.deleteFile(existingLogo);
                 }
                 String organizationLogo = FileManager.uploadFile(file);
                 if (organizationLogo != null && !organizationLogo.isEmpty()) {
-                    organization.setOrganizationLogo(organizationLogo);
+                    organization.setBranchLogo(organizationLogo);
                 } else {
-                    organization.setOrganizationLogo(null);
+                    organization.setBranchLogo(null);
                 }
             }
 

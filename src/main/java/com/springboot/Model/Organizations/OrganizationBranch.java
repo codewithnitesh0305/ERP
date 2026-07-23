@@ -59,7 +59,7 @@ public class OrganizationBranch {
     private Long cityId;
 
     @Column(name = "pin_code")
-    private String pinCode;
+    private Long pinCode;
 
     @Column(name = "is_active")
     private Boolean isActive;

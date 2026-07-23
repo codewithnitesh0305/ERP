@@ -29,6 +29,7 @@ public class FileManager {
         return Map.of("imageUrl", uploadedImages.get("secure_url").toString(), "public_id", uploadedImages.get("public_id").toString());
     }
     public static String uploadFile(MultipartFile file) throws IOException {
+        if(file == null) return null;
         JSONObject jsonObject = new JSONObject();
         Map uploadedImages = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap("resource_type", "image"));
         jsonObject.put("imageUrl", Utilities.stringValue(uploadedImages.get("secure_url")));

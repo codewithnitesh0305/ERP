@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,13 +45,13 @@ public class OrganizationController {
     private final ProfessionService professionService;
     private final FinancialYearService financialYearService;
 
-    @PostMapping("/organization")
-    public ResponseEntity<?> saveUpdateOrganization(@RequestPart(required = false) MultipartFile file, @Valid @RequestPart OrganizationRequestDto organizationRequestDto, HttpServletRequest request) throws IOException {
-        return organizationService.saveUpdateOrganization(file,organizationRequestDto,request);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> saveUpdateOrganization(@Valid @ModelAttribute OrganizationRequestDto organizationRequestDto, HttpServletRequest request) throws IOException {
+        return organizationService.saveUpdateOrganization(organizationRequestDto,request);
     }
 
-    @GetMapping("/organization")
-    public ResponseEntity<?> getOrganizationDetails(@RequestParam Long organizationId,HttpServletRequest request) {
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getOrganizationDetails(@PathVariable("id") Long organizationId,HttpServletRequest request) {
         return new ResponseEntity<>(new Response<>("Success",organizationService.getOrganizationDetails(organizationId,request)),HttpStatus.OK);
     }
 

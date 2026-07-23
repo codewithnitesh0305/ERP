@@ -35,6 +35,6 @@ public class OrganizationBranchRequestDto {
     @NotNull(message = "Kindly select city.")
     private Long cityId;
     @NotNull(message = "Pin Code is required.")
-    private String pinCode;
+    private Long pinCode;
 
 }

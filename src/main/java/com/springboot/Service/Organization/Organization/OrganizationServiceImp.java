@@ -28,15 +28,14 @@ public class OrganizationServiceImp implements OrganizationService{
 
     @Transactional
     @Override
-    public ResponseEntity<?> saveUpdateOrganization(MultipartFile file, OrganizationRequestDto organizationRequestDto, HttpServletRequest request) throws IOException {
+    public ResponseEntity<?> saveUpdateOrganization(OrganizationRequestDto organizationRequestDto, HttpServletRequest request) throws IOException {
         Long id = organizationRequestDto.getId();
         Boolean isFileChange = organizationRequestDto.getIsChange();
         Boolean isMoreBranch = organizationRequestDto.getIsMoreBranch();
         String currentDateTime = Utilities.getCurrentDateTime();
         Organization organization = id == null ? new Organization() : organizationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Organization not found."));
-        String organizationLogo = null;
+        String organizationLogo = FileManager.uploadFile(organizationRequestDto.getFile());
         if(isFileChange){
-            organizationLogo = FileManager.uploadFile(file);
             String existingLogo = organization.getOrganizationLogo();
             if(existingLogo != null && !existingLogo.isEmpty()){
                 FileManager.deleteFile(existingLogo);
@@ -56,23 +55,30 @@ public class OrganizationServiceImp implements OrganizationService{
         organization.setCurrencyId(organizationRequestDto.getCurrencyId());
         organization.setWebSiteUrl(organizationRequestDto.getWebSiteUrl());
 
-        if(isMoreBranch){
-            OrganizationBranch organizationBranch = new OrganizationBranch();
+        if(!isMoreBranch){
+            OrganizationBranch organizationBranch = id == null ? new OrganizationBranch() : organizationBranchRepository.findByOrganizationIdAndIsActiveTrue(id).orElseThrow(() -> new ResourceNotFoundException("Organization Branch not found."));
             organizationBranch.setName(organizationRequestDto.getName());
             organizationBranch.setOrganizationCode(organizationRequestDto.getCode());
             organizationBranch.setAffiliatedNo(organizationRequestDto.getAffiliationNo());
-            organizationBranch.setContactNo(organizationRequestDto.getContactCode());
+            organizationBranch.setContactCountryCode(organizationRequestDto.getContactCode());
             organizationBranch.setContactNo(organizationRequestDto.getContactNo());
             organizationBranch.setEmailId(organizationRequestDto.getEmailId());
             organizationBranch.setCurrencyId(organizationRequestDto.getCurrencyId());
             organizationBranch.setWebsiteUrl(organizationRequestDto.getWebSiteUrl());
+            organizationBranch.setIsActive(true);
 
             organizationBranch.setAddress(organizationRequestDto.getAddress());
             organizationBranch.setCountryId(organizationRequestDto.getCountryId());
             organizationBranch.setStateId(organizationRequestDto.getStateId());
             organizationBranch.setCityId(organizationRequestDto.getCityId());
             organizationBranch.setPinCode(organizationRequestDto.getPinCode());
-
+            if(id == null){
+                organizationBranch.setCreatedBy(null);
+                organizationBranch.setCreateOn(currentDateTime);
+            }else{
+                organizationBranch.setUpdateBy(null);
+                organizationBranch.setUpdatedOn(currentDateTime);
+            }
             organizationBranchRepository.save(organizationBranch);
         }
 
@@ -87,7 +93,6 @@ public class OrganizationServiceImp implements OrganizationService{
         organization.setYouTubeUrl(organizationRequestDto.getYouTubeUrl());
         organization.setInstagramUrl(organizationRequestDto.getInstagramUrl());
         organization.setXUrl(organizationRequestDto.getXUrl());
-
         if(id == null){
             organization.setCreatedBy(null);
             organization.setCreatedOn(currentDateTime);
@@ -95,7 +100,6 @@ public class OrganizationServiceImp implements OrganizationService{
             organization.setUpdatedBy(null);
             organization.setUpdatedOn(currentDateTime);
         }
-
         organizationRepository.save(organization);
         return ApiResponse.apiSuccess();
     }
@@ -104,27 +108,28 @@ public class OrganizationServiceImp implements OrganizationService{
     public OrganizationResponseDto getOrganizationDetails(Long organizationId, HttpServletRequest request) {
         Organization organization = organizationRepository.findById(organizationId).orElseThrow(() -> new ResourceNotFoundException("Organization not found"));
         OrganizationResponseDto organizationResponseDto = new OrganizationResponseDto();
-        organizationResponseDto.setName(organization.getName());
-        organizationResponseDto.setCode(organization.getCode());
-        organizationResponseDto.setAffiliationNo(organization.getAffiliationNo());
-        organizationResponseDto.setContactCode(organization.getContactCode());
-        organizationResponseDto.setContactNo(organization.getContactNo());
-        organizationResponseDto.setEmailId(organization.getEmailId());
-        organizationResponseDto.setCurrencyId(organization.getCurrencyId());
-        organizationResponseDto.setWebSiteUrl(organization.getWebSiteUrl());
-        organizationResponseDto.setIsMoreBranch(organization.getIsMoreBranch());
+        organizationResponseDto.setId(Utilities.longValue(organization.getId()));
+        organizationResponseDto.setName(Utilities.stringValue(organization.getName()));
+        organizationResponseDto.setCode(Utilities.stringValue(organization.getCode()));
+        organizationResponseDto.setAffiliationNo(Utilities.stringValue(organization.getAffiliationNo()));
+        organizationResponseDto.setContactCode(Utilities.stringValue(organization.getContactCode()));
+        organizationResponseDto.setContactNo(Utilities.stringValue(organization.getContactNo()));
+        organizationResponseDto.setEmailId(Utilities.stringValue(organization.getEmailId()));
+        organizationResponseDto.setCurrencyId(Utilities.longValue(organization.getCurrencyId()));
+        organizationResponseDto.setWebSiteUrl(Utilities.stringValue(organization.getWebSiteUrl()));
+        organizationResponseDto.setIsMoreBranch(Utilities.booleanValue(organization.getIsMoreBranch()));
 
-        organizationResponseDto.setAddress(organization.getAddress());
-        organizationResponseDto.setCountryId(organization.getCountryId());
-        organizationResponseDto.setStateId(organization.getStateId());
-        organizationResponseDto.setCityId(organization.getCityId());
-        organizationResponseDto.setPinCode(organization.getPinCode());
+        organizationResponseDto.setAddress(Utilities.stringValue(organization.getAddress()));
+        organizationResponseDto.setCountryId(Utilities.longValue(organization.getCountryId()));
+        organizationResponseDto.setStateId(Utilities.longValue(organization.getStateId()));
+        organizationResponseDto.setCityId(Utilities.longValue(organization.getCityId()));
+        organizationResponseDto.setPinCode(Utilities.longValue(organization.getPinCode()));
 
-        organizationResponseDto.setFaceBookUrl(organization.getFaceBookUrl());
-        organizationResponseDto.setLinkedInUrl(organization.getLinkedInUrl());
-        organizationResponseDto.setYouTubeUrl(organization.getYouTubeUrl());
-        organizationResponseDto.setInstagramUrl(organization.getInstagramUrl());
-        organizationResponseDto.setXUrl(organization.getXUrl());
+        organizationResponseDto.setFaceBookUrl(Utilities.stringValue(organization.getFaceBookUrl()));
+        organizationResponseDto.setLinkedInUrl(Utilities.stringValue(organization.getLinkedInUrl()));
+        organizationResponseDto.setYouTubeUrl(Utilities.stringValue(organization.getYouTubeUrl()));
+        organizationResponseDto.setInstagramUrl(Utilities.stringValue(organization.getInstagramUrl()));
+        organizationResponseDto.setXUrl(Utilities.stringValue(organization.getXUrl()));
         return organizationResponseDto;
     }
 }

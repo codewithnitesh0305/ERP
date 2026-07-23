@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Repository
 public interface OrganizationBranchRepository extends JpaRepository<OrganizationBranch,Long> {
@@ -21,5 +22,7 @@ public interface OrganizationBranchRepository extends JpaRepository<Organization
             From organization_branch org where id = :organizationId;
             """)
     List<Map<String,Object>> getOrganizationDetails(@Param("organizationId") Long organizationId);
+
+    Optional<OrganizationBranch> findByOrganizationIdAndIsActiveTrue(Long organizationId);
 
 }

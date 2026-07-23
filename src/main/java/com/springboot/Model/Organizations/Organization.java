@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "organization" ,uniqueConstraints = {@UniqueConstraint(columnNames = {"name","code","affiliated_no"})})
+@Table(name = "organizations" ,uniqueConstraints = {@UniqueConstraint(columnNames = {"name","code","affiliated_no"})})
 @NoArgsConstructor
 @Data
 public class Organization {
@@ -32,7 +32,7 @@ public class Organization {
     @Column(name = "contact_no")
     private String contactNo;
 
-    @Column(name = "emailId")
+    @Column(name = "email_id")
     private String emailId;
 
     @Column(name = "currency_id")
@@ -57,7 +57,7 @@ public class Organization {
     private Long cityId;
 
     @Column(name = "pin_code")
-    private String pinCode;
+    private Long pinCode;
 
     @Column(name = "facebook_url")
     private String faceBookUrl;
