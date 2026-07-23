@@ -17,7 +17,7 @@ public interface OrganizationBranchRepository extends JpaRepository<Organization
 
     @Query(nativeQuery = true, value = """
             Select org.organization_logo->>'$.serving_url' AS organizationLogo,org.organization_name as organizationName,org.organization_code as organizationCode,
-            org.affiliated_no as affiliatedNo,org.mobile_code_id as mobileCodeId,org.contact_no as contactNo,org.organization_email as organizationEmail,
+            org.affiliated_no as affiliatedNo,org.contact_country_code as contactCode,org.contact_no as contactNo,org.organization_email as organizationEmail,
             org.currency_id as currencyId,org.website_url as webSiteUrl,org.address,org.country_id as countryId,org.state_id as stateId,org.city_id as cityId,org.pin_code as pinCode
             From organization_branch org where id = :organizationId;
             """)

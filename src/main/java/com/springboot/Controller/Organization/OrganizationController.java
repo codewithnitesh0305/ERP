@@ -56,13 +56,13 @@ public class OrganizationController {
     }
 
     @PostMapping("/organization-branch")
-    public ResponseEntity<?> saveUpdateOrganizationBranch(@RequestPart(required = false) MultipartFile file, @Valid @RequestPart OrganizationBranchRequestDto organizationBranchRequestDto, HttpServletRequest request) {
-        return organizationBranchService.saveUpdateOrganizationBranch(file,organizationBranchRequestDto,request);
+    public ResponseEntity<?> saveUpdateOrganizationBranch(@Valid @ModelAttribute OrganizationBranchRequestDto organizationBranchRequestDto, HttpServletRequest request) {
+        return organizationBranchService.saveUpdateOrganizationBranch(organizationBranchRequestDto,request);
     }
 
-    @GetMapping("/organization-branch")
-    public ResponseEntity<?> getOrganizationBranchDetails( @RequestParam Map<String, Object> param,HttpServletRequest request) {
-        return new ResponseEntity<>(new Response<>("Success",organizationBranchService.getOrganizationDetails(param,request)),HttpStatus.OK);
+    @GetMapping("/organization-branch/{id}")
+    public ResponseEntity<?> getOrganizationBranchDetails(@PathVariable("id") Long organizationBranchId,HttpServletRequest request) {
+        return new ResponseEntity<>(new Response<>("Success",organizationBranchService.getOrganizationDetails(organizationBranchId,request)),HttpStatus.OK);
     }
 
     @PostMapping("/department")

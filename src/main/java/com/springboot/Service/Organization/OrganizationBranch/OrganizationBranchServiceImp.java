@@ -12,7 +12,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,7 +26,7 @@ public class OrganizationBranchServiceImp implements OrganizationBranchService {
 
     @Override
     @Transactional
-    public ResponseEntity<?> saveUpdateOrganizationBranch(MultipartFile file, OrganizationBranchRequestDto dto, HttpServletRequest request) {
+    public ResponseEntity<?> saveUpdateOrganizationBranch(OrganizationBranchRequestDto dto, HttpServletRequest request) {
         try {
 
             Long organizationId = dto.getId();
@@ -40,7 +39,7 @@ public class OrganizationBranchServiceImp implements OrganizationBranchService {
                 if (!existingLogo.isEmpty()) {
                     FileManager.deleteFile(existingLogo);
                 }
-                String organizationLogo = FileManager.uploadFile(file);
+                String organizationLogo = FileManager.uploadFile(dto.getFile());
                 if (organizationLogo != null && !organizationLogo.isEmpty()) {
                     organization.setBranchLogo(organizationLogo);
                 } else {
@@ -78,15 +77,15 @@ public class OrganizationBranchServiceImp implements OrganizationBranchService {
     }
 
     @Override
-    public Map<String, Object> getOrganizationDetails(Map<String, Object> param, HttpServletRequest request) {
+    public Map<String, Object> getOrganizationDetails(Long organizationBranchId, HttpServletRequest request) {
         Map<String,Object> result_map = new LinkedHashMap<>();
         List<Map<String, Object>> cityList = customRepo.getAllCity();
         List<Map<String, Object>> statesList = customRepo.getAllStates();
         List<Map<String, Object>> countryList = customRepo.getAllCountry();
         List<Map<String, Object>> allCountryMobileCodeList = customRepo.getAllCountryMobileCode();
-        Long organizationId = Utilities.longValue(param.get("id")) ;
-        if(organizationId != null){
-            List<Map<String,Object>> organizationDetailList = organizationRepository.getOrganizationDetails(organizationId);
+
+        if(organizationBranchId != null){
+            List<Map<String,Object>> organizationDetailList = organizationRepository.getOrganizationDetails(organizationBranchId);
             result_map.put("organizationList",organizationDetailList);
         }
         result_map.put("cityList",cityList);

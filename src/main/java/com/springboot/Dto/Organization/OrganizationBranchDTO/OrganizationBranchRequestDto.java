@@ -5,12 +5,13 @@ package com.springboot.Dto.Organization.OrganizationBranchDTO;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class OrganizationBranchRequestDto {
 
     private Long id;
-    private String organizationLogo;
+    private MultipartFile file;
     private Boolean isLogoChange;
     @NotEmpty(message = "Name is required.")
     private String name;
