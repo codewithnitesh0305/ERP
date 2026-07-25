@@ -5,10 +5,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -101,8 +98,19 @@ public class CustomRepo {
         filter = Utilities.filterValue(filter);
         groupBy = Utilities.groupByValue(groupBy);
         orderBy = Utilities.orderByValue(orderBy);
-        query += query + filter + groupBy + orderBy;
+         query = query + filter + groupBy + orderBy;
         return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
+    }
+
+    public Integer getContactNoLengthByContactCode(String contactCode) {
+        if (contactCode == null || contactCode.isBlank()) return null;
+        String query = "SELECT max_length AS max_length FROM country_codes WHERE phone_code = ?1";
+        Map<Integer, Object> params = new HashMap<>();
+        params.put(1, contactCode);
+        LinkedList<Map<String, Object>> result = Utilities.getToupleRecordsWithObjects(entityManager, query, params);
+        if (result.isEmpty()) return null;
+        Object value = result.getFirst().get("max_length");
+        return value != null ? Utilities.integerValue(value) : null;
     }
 
 }

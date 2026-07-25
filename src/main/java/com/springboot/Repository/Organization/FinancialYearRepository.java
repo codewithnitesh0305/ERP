@@ -17,6 +17,7 @@ public interface FinancialYearRepository extends JpaRepository<FinancialYear,Lon
     @Query(nativeQuery = true,value = "Select id,financial_year_name,from_date,to_date from financial_year where (:fts IS NULL OR :fts = '' OR financial_year_name LIKE CONCAT('%', :fts, '%'))")
     List<Map<String,Object>> getFinancialYear(@Param("fts") String fts);
 
+    @Query("SELECT f.id FROM FinancialYear f WHERE f.isActive = true")
     Long findIdByIsActiveTrue();
 
     @Query(nativeQuery = true,value = "Select id,financial_year_name as name from financial_year_name")

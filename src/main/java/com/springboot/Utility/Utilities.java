@@ -14,7 +14,10 @@ import java.util.*;
 public class Utilities {
 
     public static String stringValue(Object value) {
-        return value == null ? "" : String.valueOf(value);
+        return value == null ? "" : String.valueOf(value).trim();
+    }
+    public static String stringNullValue(Object value) {
+        return value == null ? null : String.valueOf(value).trim();
     }
     public static Long longValue(Object value) {
         if (value == null) return null;
@@ -134,8 +137,8 @@ public class Utilities {
     public static String getIndianDateFormatFromUSDate(String usDate) {
         try {
             if (usDate == null || usDate.trim().isEmpty()) return "";
-            DateTimeFormatter usFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-            DateTimeFormatter indianFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            DateTimeFormatter usFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            DateTimeFormatter indianFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
             LocalDate date = LocalDate.parse(usDate, usFormatter);
             return date.format(indianFormatter);
         } catch (Exception e) {
@@ -146,7 +149,7 @@ public class Utilities {
     public static String getServingUrlFromImageString(String image){
         if(image == null || image.isEmpty()) return "";
         JSONObject jsonObject = new JSONObject(image);
-        return jsonObject.optString("servingUrl");
+        return jsonObject.optString("imageUrl");
     }
 
     public static Long currentEmployeeId(){

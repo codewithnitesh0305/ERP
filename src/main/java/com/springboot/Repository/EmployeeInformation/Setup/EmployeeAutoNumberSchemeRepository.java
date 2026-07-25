@@ -25,7 +25,7 @@ public interface EmployeeAutoNumberSchemeRepository extends JpaRepository<Employ
 
     List<EmployeeAutoNumber> findByDeletedOnIsNullOrderByIdDesc();
 
-    @Query(nativeQuery = true, value = "SELECT * FROM employee_auto_number_scheme e WHERE (e.financialYear.id = :financialYearId OR e.financialYear IS NULL) AND (e.department.id = :departmentId OR e.department IS NULL)")
+    @Query(nativeQuery = true, value = "SELECT * FROM employee_auto_number_scheme e WHERE (e.financial_year_id = :financialYearId OR e.financial_year_id IS NULL) AND (e.department_id = :departmentId OR e.department_id IS NULL)")
     EmployeeAutoNumber findEmployeeAutoNo(@Param("financialYearId") Long financialYearId, @Param("departmentId") Long departmentId);
 
 

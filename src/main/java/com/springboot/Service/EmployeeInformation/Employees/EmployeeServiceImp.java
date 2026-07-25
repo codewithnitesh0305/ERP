@@ -1,5 +1,6 @@
 package com.springboot.Service.EmployeeInformation.Employees;
 
+import com.springboot.Dto.EmployeeInformation.DocumentSubmissionDto;
 import com.springboot.Dto.EmployeeInformation.EmployeeDto;
 import com.springboot.Exception.ResourceNotFoundException;
 import com.springboot.Exception.ValidationException;
@@ -13,7 +14,6 @@ import com.springboot.Repository.EmployeeInformation.Employees.EmployeeDocumentS
 import com.springboot.Repository.EmployeeInformation.Employees.EmployeeRepository;
 import com.springboot.Repository.EmployeeInformation.Employees.EmployeeStaticQuery;
 import com.springboot.Repository.EmployeeInformation.Setup.EmployeeDocumentRepository;
-import com.springboot.Repository.EmployeeInformation.Setup.EmployeeTypeRepository;
 import com.springboot.Repository.Organization.*;
 import com.springboot.Repository.User.UserRepository;
 import com.springboot.Service.Cloudinary.FileManager;
@@ -25,7 +25,9 @@ import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -46,14 +48,15 @@ public class EmployeeServiceImp implements EmployeeService{
     private final GenderRepository genderRepository;
     private final DepartmentRepository departmentRepository;
     private final DesignationRepository designationRepository;
-    private final EmployeeTypeRepository employeeTypeRepository;
     private final EmployeeAutoNumberSchemeService employeeAutoNumberSchemeService;
     private final BloodGroupRepository bloodGroupRepository;
     private final ReligionRepository religionRepository;
     private final CasteRepository casteRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public ResponseEntity<?> saveUpdateEmployee(Map<String, MultipartFile> fileMap, EmployeeDto dto, HttpServletRequest request) {
+    @Transactional
+    public ResponseEntity<?> saveUpdateEmployee(EmployeeDto dto, HttpServletRequest request) {
         try {
             Long id = dto.getId();
             String employeeContactCode = dto.getContactNoCountryCode();
@@ -63,20 +66,47 @@ public class EmployeeServiceImp implements EmployeeService{
             Long departmentId = dto.getDepartmentId();
             Boolean isEmployeeProfileImageChange = dto.getIsChange();
             Long financialYearId = dto.getFinancialYearId();
-            String employeeCode = dto.getEmployeeCode();
+            String employeeCode = Utilities.stringValue(dto.getEmployeeCode());
+
+            if (employeeContactCode != null && !employeeContactCode.isEmpty()) {
+                Integer lengthByContactCode = customRepo.getContactNoLengthByContactCode(employeeContactCode);
+                if (lengthByContactCode != null && dto.getContactNo() != null && dto.getContactNo().length() != lengthByContactCode) {
+                    return ApiResponse.apiValidation("Contact No. should be " + lengthByContactCode + " digits.");
+                }
+            }
+            if (fatherContactCode != null && !fatherContactCode.isEmpty()) {
+                Integer lengthByContactCode = customRepo.getContactNoLengthByContactCode(fatherContactCode);
+                if (lengthByContactCode != null && dto.getFatherContactNo() != null && dto.getFatherContactNo().length() != lengthByContactCode) {
+                    return ApiResponse.apiValidation("Father Contact No. should be " + lengthByContactCode + " digits.");
+                }
+            }
+            if (motherContactCode != null && !motherContactCode.isEmpty()) {
+                Integer lengthByContactCode = customRepo.getContactNoLengthByContactCode(motherContactCode);
+                if (lengthByContactCode != null && dto.getMotherContactNo() != null && dto.getMotherContactNo().length() != lengthByContactCode) {
+                    return ApiResponse.apiValidation("Mother Contact No. should be " + lengthByContactCode + " digits.");
+                }
+            }
+            if (spouseContactCode != null && !spouseContactCode.isEmpty()) {
+                Integer lengthByContactCode = customRepo.getContactNoLengthByContactCode(spouseContactCode);
+                if (lengthByContactCode != null && dto.getSpouseContactNo() != null && dto.getSpouseContactNo().length() != lengthByContactCode) {
+                    return ApiResponse.apiValidation("Spouse Contact No. should be " + lengthByContactCode + " digits.");
+                }
+            }
+            boolean isContactNoExist = employeeRepository.existsByContactNoAndIdNot(dto.getContactNo(), id);
+            if(isContactNoExist) return ApiResponse.apiValidation("Contact No. already exist.");
+
+            boolean isEmailExist = employeeRepository.existsByEmailIdAndIdNot(dto.getEmailId(), id);
+            if(isEmailExist) return ApiResponse.apiValidation("Email Id already exist.");
 
             if (!Objects.equals(dto.getAccountNo(), dto.getReEnterAccountNo())) return ApiResponse.apiValidation("Account No. and Re-enter Account No. should match.");
-            Employees employees = id == null ? new Employees() : employeeRepository.findById(dto.getId()).orElseThrow(() -> new ResourceNotFoundException("Employee not found."));
+            Employees employees = id == null ? new Employees() : employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee not found."));
+            if(employeeCode.isBlank()) employeeCode = employeeAutoNumberSchemeService.generateEmployeeAutoNumber(financialYearId, departmentId);
 
-            if(employeeCode == null || employeeCode.isEmpty()){
-                employeeCode = employeeAutoNumberSchemeService.generateEmployeeAutoNumber(financialYearId, departmentId);
-            }
-
-            // Basic Details
-            MultipartFile employeeImage = fileMap.get("employeeProfileImage");
-            if(employeeImage != null){
+            Map<String,MultipartFile> employeeImageMap = dto.getFileMap();
+            if(employeeImageMap != null){
+                MultipartFile employeeImage = employeeImageMap.getOrDefault("employeeProfileImage",null);
                 String employeeProfileImage = FileManager.uploadFile(employeeImage);
-                if(isEmployeeProfileImageChange){ // default true
+                if(isEmployeeProfileImageChange){
                     String existingProfileImage = employees.getEmployeeProfileImage();
                     if(existingProfileImage != null && !existingProfileImage.isEmpty()){
                         FileManager.deleteFile(existingProfileImage);
@@ -89,93 +119,14 @@ public class EmployeeServiceImp implements EmployeeService{
                     }
                 }
             }
-            employees.setEmployeeCode(employeeCode);
-            employees.setFinancialYearId(dto.getFinancialYearId());
-            employees.setSalutationId(dto.getSalutationId());
-            employees.setFirstName(dto.getFirstName());
-            employees.setMiddleName(dto.getMiddleName());
-            employees.setLastName(dto.getLastName());
-            String fullName = dto.getFirstName();
-            if (dto.getMiddleName() != null && !dto.getMiddleName().isEmpty()) fullName += " " + dto.getMiddleName();
-            if (dto.getLastName() != null && !dto.getLastName().isEmpty()) fullName += " " + dto.getLastName();
-            employees.setFullName(fullName);
-            employees.setGenderId(dto.getGenderId());
-            employees.setDateOfBirth(Utilities.getUSDateFromIndianDate(dto.getDateOfBirth()));
-
-            employees.setContactNoCountryCode(dto.getContactNoCountryCode());
-            employees.setContactNo(dto.getContactNo());
-            employees.setEmailId(dto.getEmailId());
-
-            employees.setBloodGroupId(dto.getBloodGroupId());
-            employees.setMaritalStatusId(dto.getMaritalStatusId());
-            employees.setNationalityId(dto.getNationalityId());
-            employees.setReligionId(dto.getReligionId());
-            employees.setCasteId(dto.getCasteId());
-
-            // Official Details
-            employees.setDepartmentId(dto.getDepartmentId());
-            employees.setDesignationId(dto.getDesignationId());
-            employees.setUserTypeId(dto.getUserTypeId());
-            employees.setEmployeeTypeId(dto.getEmployeeTypeId());
-
-            employees.setDateOfJoining(Utilities.getUSDateFromIndianDate(dto.getDateOfJoining()));
-            employees.setReportingAuthorityId(dto.getReportingAuthorityId());
-            employees.setUanNo(dto.getUanNo());
-
-            // Father Details
-            employees.setFatherSalutationId(dto.getFatherSalutationId());
-            employees.setFatherName(dto.getFatherName());
-            employees.setFatherContactNoCountryCode(fatherContactCode);
-            employees.setFatherContactNo(dto.getFatherContactNo());
-            employees.setFatherEmailId(dto.getFatherEmailId());
-
-            // Mother Details
-            employees.setMotherSalutationId(dto.getMotherSalutationId());
-            employees.setMotherName(dto.getMotherName());
-            employees.setMotherContactNoCountryCode(motherContactCode);
-            employees.setMotherContactNo(dto.getMotherContactNo());
-            employees.setMotherEmailId(dto.getMotherEmailId());
-
-            // Spouse Details
-            employees.setSpouseSalutationId(dto.getSpouseSalutationId());
-            employees.setSpouseName(dto.getSpouseName());
-            employees.setSpouseContactNoCountryCode(spouseContactCode);
-            employees.setSpouseContactNo(dto.getSpouseContactNo());
-            employees.setSpouseEmailId(dto.getSpouseEmailId());
-
-            // Correspondence Address
-            employees.setCorrespondingAddress(dto.getCorrespondingAddress());
-            employees.setCorrespondingCountryId(dto.getCorrespondingCountryId());
-            employees.setCorrespondingStateId(dto.getCorrespondingStateId());
-            employees.setCorrespondingCityId(dto.getCorrespondingCityId());
-            employees.setCorrespondingPinCode(dto.getCorrespondingPinCode());
-            employees.setIsCorrespondenceSameAsPermanent(dto.getIsCorrespondenceSameAsPermanent());
-            // Permanent Address
-            if (Boolean.TRUE.equals(dto.getIsCorrespondenceSameAsPermanent())) {
-                employees.setPermanentAddress(dto.getCorrespondingAddress());
-                employees.setPermanentCountryId(dto.getCorrespondingCountryId());
-                employees.setPermanentStateId(dto.getCorrespondingStateId());
-                employees.setPermanentCityId(dto.getCorrespondingCityId());
-                employees.setPermanentPinCode(dto.getCorrespondingPinCode());
-            } else {
-                employees.setPermanentAddress(dto.getPermanentAddress());
-                employees.setPermanentCountryId(dto.getPermanentCountryId());
-                employees.setPermanentStateId(dto.getPermanentStateId());
-                employees.setPermanentCityId(dto.getPermanentCityId());
-                employees.setPermanentPinCode(dto.getPermanentPinCode());
-            }
-            // Bank Details
-            employees.setAccountName(dto.getAccountName());
-            employees.setAccountNo(dto.getAccountNo());
-            employees.setIfscCode(dto.getIfscCode());
-            employees.setBankName(dto.getBankName());
-            employees.setBranch(dto.getBranch());
+            employees = setEmployeesData(employees,dto,employeeCode,request);
             Long employeeId = employeeRepository.save(employees).getId();
-            processedDocument(fileMap, dto, employeeId, request);
-            if (dto.getId() == null) {
+            processedDocument(dto, employeeId, request);
+            if (id == null) {
                 Users user = new Users();
                 user.setEmailId(dto.getEmailId());
                 user.setEmployeeId(employeeId);
+                user.setPassword(passwordEncoder.encode("Employee@123"));
                 user.setCreatedBy(null);
                 user.setCreatedOn(Utilities.getCurrentDateTime());
                 userRepository.save(user);
@@ -186,12 +137,104 @@ public class EmployeeServiceImp implements EmployeeService{
         }
     }
 
+    public Employees setEmployeesData(Employees employees,EmployeeDto dto,String employeeCode,HttpServletRequest request) throws IOException {
+        // Basic Details
+        Long id = dto.getId();
+        employees.setEmployeeCode(employeeCode);
+        employees.setFinancialYearId(Utilities.longValue(dto.getFinancialYearId()));
+        employees.setSalutationId(Utilities.longValue(dto.getSalutationId()));
+        employees.setFirstName(Utilities.stringNullValue(dto.getFirstName()));
+        employees.setMiddleName(Utilities.stringNullValue(dto.getMiddleName()));
+        employees.setLastName(Utilities.stringNullValue(dto.getLastName()));
+        String fullName = dto.getFirstName();
+        if (dto.getMiddleName() != null && !dto.getMiddleName().isEmpty()) fullName += " " + dto.getMiddleName();
+        if (dto.getLastName() != null && !dto.getLastName().isEmpty()) fullName += " " + dto.getLastName();
+        employees.setFullName(fullName);
+        employees.setGenderId(Utilities.longValue(dto.getGenderId()));
+        employees.setDateOfBirth(Utilities.stringNullValue(Utilities.getUSDateFromIndianDate(dto.getDateOfBirth())));
 
-    public void processedDocument(Map<String, MultipartFile> fileMap, EmployeeDto dto, Long employeeId, HttpServletRequest request) throws IOException {
-        String documentListStr = dto.getDocumentJson();
+        employees.setContactNoCountryCode(Utilities.stringNullValue(dto.getContactNoCountryCode()));
+        employees.setContactNo(Utilities.stringNullValue(dto.getContactNo()));
+        employees.setEmailId(Utilities.stringNullValue(dto.getEmailId()));
+
+        employees.setBloodGroupId(dto.getBloodGroupId());
+        employees.setMaritalStatusId(dto.getMaritalStatusId());
+        employees.setNationalityId(dto.getNationalityId());
+        employees.setReligionId(dto.getReligionId());
+        employees.setCasteId(dto.getCasteId());
+
+        // Official Details
+        employees.setDepartmentId(dto.getDepartmentId());
+        employees.setDesignationId(dto.getDesignationId());
+        employees.setUserTypeId(dto.getUserTypeId());
+        employees.setEmployeeTypeId(dto.getEmployeeTypeId());
+
+        employees.setDateOfJoining(Utilities.getUSDateFromIndianDate(dto.getDateOfJoining()));
+        employees.setReportingAuthorityId(dto.getReportingAuthorityId());
+        employees.setUanNo(dto.getUanNo());
+
+        // Father Details
+        employees.setFatherSalutationId(dto.getFatherSalutationId());
+        employees.setFatherName(dto.getFatherName());
+        employees.setFatherContactNoCountryCode(dto.getFatherContactNoCountryCode());
+        employees.setFatherContactNo(dto.getFatherContactNo());
+        employees.setFatherEmailId(dto.getFatherEmailId());
+
+        // Mother Details
+        employees.setMotherSalutationId(dto.getMotherSalutationId());
+        employees.setMotherName(Utilities.stringNullValue(dto.getMotherName()));
+        employees.setMotherContactNoCountryCode(Utilities.stringNullValue(dto.getMotherContactNoCountryCode()));
+        employees.setMotherContactNo(Utilities.stringNullValue(dto.getMotherContactNo()));
+        employees.setMotherEmailId(Utilities.stringNullValue(dto.getMotherEmailId()));
+
+        // Spouse Details
+        employees.setSpouseSalutationId(dto.getSpouseSalutationId());
+        employees.setSpouseName(Utilities.stringNullValue(dto.getSpouseName()));
+        employees.setSpouseContactNoCountryCode(dto.getSpouseContactNoCountryCode());
+        employees.setSpouseContactNo(Utilities.stringNullValue(dto.getSpouseContactNo()));
+        employees.setSpouseEmailId(Utilities.stringNullValue(dto.getSpouseEmailId()));
+
+        // Correspondence Address
+        employees.setCorrespondingAddress(Utilities.stringNullValue(dto.getCorrespondingAddress()));
+        employees.setCorrespondingCountryId(dto.getCorrespondingCountryId());
+        employees.setCorrespondingStateId(dto.getCorrespondingStateId());
+        employees.setCorrespondingCityId(dto.getCorrespondingCityId());
+        employees.setCorrespondingPinCode(Utilities.stringNullValue(dto.getCorrespondingPinCode()));
+        employees.setIsCorrespondenceSameAsPermanent(dto.getIsCorrespondenceSameAsPermanent());
+        // Permanent Address
+        if (Boolean.TRUE.equals(dto.getIsCorrespondenceSameAsPermanent())) {
+            employees.setPermanentAddress(dto.getCorrespondingAddress());
+            employees.setPermanentCountryId(dto.getCorrespondingCountryId());
+            employees.setPermanentStateId(dto.getCorrespondingStateId());
+            employees.setPermanentCityId(dto.getCorrespondingCityId());
+            employees.setPermanentPinCode(Utilities.stringNullValue(dto.getCorrespondingPinCode()));
+        } else {
+            employees.setPermanentAddress(Utilities.stringNullValue(dto.getPermanentAddress()));
+            employees.setPermanentCountryId(dto.getPermanentCountryId());
+            employees.setPermanentStateId(dto.getPermanentStateId());
+            employees.setPermanentCityId(dto.getPermanentCityId());
+            employees.setPermanentPinCode(Utilities.stringNullValue(dto.getPermanentPinCode()));
+        }
+        // Bank Details
+        employees.setAccountName(Utilities.stringNullValue(dto.getAccountName()));
+        employees.setAccountNo(Utilities.stringNullValue(dto.getAccountNo()));
+        employees.setIfscCode(Utilities.stringNullValue(dto.getIfscCode()));
+        employees.setBankName(Utilities.stringNullValue(dto.getBankName()));
+        employees.setBranch(Utilities.stringNullValue(dto.getBranch()));
+        if(id == null){
+            employees.setCreatedBy(Utilities.currentEmployeeId());
+            employees.setCreatedOn(Utilities.getCurrentDateTime());
+        }else{
+            employees.setUpdatedBy(Utilities.currentEmployeeId());
+            employees.setUpdatedOn(Utilities.getCurrentDateTime());
+        }
+        return employees;
+    }
+
+    public void processedDocument(EmployeeDto dto, Long employeeId, HttpServletRequest request) throws IOException {
         Long departmentId = dto.getDepartmentId();
         String createdOn = Utilities.getCurrentDateTime();
-        List<Map<String, Object>> documentMapList = parseEmployeeDocumentJson(documentListStr);
+        List<DocumentSubmissionDto> documentMapList = dto.getDocumentSubmissionList();
         Map<Long, Boolean> employeeDocumentMap = new HashMap<>();
         List<EmployeeDocument> employeeDocumentList = employeeDocumentRepository.findByDepartmentId(departmentId);
         if (Utilities.isCollectionNotEmpty(employeeDocumentList)) {
@@ -211,21 +254,23 @@ public class EmployeeServiceImp implements EmployeeService{
 
         List<EmployeeDocumentSubmission> documentSubmissionList = new ArrayList<>();
         if (Utilities.isCollectionNotEmpty(documentMapList)) {
-            for (Map<String, Object> documentDataMap : documentMapList) {
-                Long id = Utilities.longValue(documentDataMap.get("id"));
-                Long documentId = Utilities.longValue(documentDataMap.get("documentId"));
-                String documentName = Utilities.stringValue(documentDataMap.get("documentName"));
-                String documentExpiryDate = Utilities.getUSDateFromIndianDate(Utilities.stringValue(documentDataMap.get("documentExpiryDate")));
-                String fileName = Utilities.stringValue(documentDataMap.get("fileName"));
-                String documentNumber = Utilities.stringValue(documentDataMap.get("documentNumber"));
-                Boolean isFileChange = Utilities.booleanValue(documentDataMap.get("isFileChange"));
+            for (DocumentSubmissionDto documentSubmissionDto : documentMapList) {
+                Long id = Utilities.longValue(documentSubmissionDto.getId());
+                Long documentId = Utilities.longValue(documentSubmissionDto.getDocumentId());
+                String documentName = Utilities.stringValue(documentSubmissionDto.getDocumentName());
+                String expiryDate = Utilities.getUSDateFromIndianDate(Utilities.stringValue(documentSubmissionDto.getExpiryDate()));
+                String submissionDate = Utilities.getUSDateFromIndianDate(Utilities.stringValue(documentSubmissionDto.getSubmissionDate()));
+                String fileName = Utilities.stringValue(documentSubmissionDto.getFileName());
+                String documentNumber = Utilities.stringValue(documentSubmissionDto.getDocumentNumber());
+                Boolean isFileChange = Utilities.booleanValue(documentSubmissionDto.getIsFileChange());
                 Boolean isDocumentMandatory = employeeDocumentMap.get(documentId);
-                if (Boolean.TRUE.equals(isDocumentMandatory) && (documentNumber.isEmpty() || documentExpiryDate.isEmpty())) {
+                if (Boolean.TRUE.equals(isDocumentMandatory) && (documentNumber.isEmpty() || expiryDate.isEmpty() && submissionDate.isEmpty())) {
                     throw new ValidationException(documentName + " details is mandatory");
                 }
                 EmployeeDocumentSubmission employeeDocumentSubmission;
-                MultipartFile multipartPart = fileMap.get(fileName);
-                if (existingEmployeeDocumentMap.containsKey(id)) {
+                Map<String, MultipartFile> multipartFileMap = dto.getFileMap();
+                MultipartFile multipartPart = multipartFileMap.getOrDefault(fileName,null);
+                if (multipartPart != null && existingEmployeeDocumentMap.containsKey(id)) {
                     employeeDocumentSubmission = existingEmployeeDocumentMap.get(id);
                     if (Boolean.TRUE.equals(isFileChange)) {
                         String documentJson = FileManager.uploadFile(multipartPart);
@@ -252,11 +297,12 @@ public class EmployeeServiceImp implements EmployeeService{
                     employeeDocumentSubmission.setCreatedOn(createdOn);
                 }
                 employeeDocumentSubmission.setDocumentNo(documentNumber);
-                employeeDocumentSubmission.setDocumentExpiryDate(documentExpiryDate);
+                employeeDocumentSubmission.setDocumentExpiryDate(expiryDate);
+                employeeDocumentSubmission.setSubmissionDate(submissionDate);
                 documentSubmissionList.add(employeeDocumentSubmission);
             }
         }
-        employeeDocumentSubmissionRepository.saveAll(documentSubmissionList);
+        if (!documentSubmissionList.isEmpty()) employeeDocumentSubmissionRepository.saveAll(documentSubmissionList);
     }
 
     public List<Map<String, Object>> parseEmployeeDocumentJson(String documentListStr) {
@@ -290,13 +336,13 @@ public class EmployeeServiceImp implements EmployeeService{
             if(financialYearId == null){
                 financialYearId = financialYearRepository.findIdByIsActiveTrue();
             }
-            StringBuilder filter = new StringBuilder("emp.releasing_date <= CURRENT_DATE()");
+            StringBuilder filter = new StringBuilder("(emp.releasing_date IS NULL OR emp.releasing_date > CURRENT_DATE())");
             if(employeeTypeId != null){
-                filter.append(" emp.employee_type_id = ").append(employeeTypeId);
+                filter.append(" and emp.employee_type_id = ").append(employeeTypeId);
             }
-            if(departmentId != null){
+            if(financialYearId != null){
                 if(!filter.isEmpty()) filter.append(" and ");
-                filter.append(" emp.department_id = ").append(financialYearId);
+                filter.append(" emp.financial_year_id = ").append(financialYearId);
             }
             if(departmentId != null){
                 if(!filter.isEmpty()) filter.append(" and ");
@@ -311,12 +357,7 @@ public class EmployeeServiceImp implements EmployeeService{
                 filter.append(" emp.gender_id = ").append(genderId);
             }
 
-            Map<Long,String> employeeTypeMap = employeeTypeRepository.getActiveEmployeeTypeList().stream().collect(Collectors.toMap(sal -> Utilities.longValue(sal.get("value")), sal -> Utilities.stringValue(sal.get("label"))));
             Map<Long,String> salutationMap = salutationRepository.getActiveSalutationList().stream().collect(Collectors.toMap(sal -> Utilities.longValue(sal.get("value")), sal -> Utilities.stringValue(sal.get("label"))));
-            Map<Long,String> genderMap = genderRepository.getActiveGenderList().stream().collect(Collectors.toMap(gen -> Utilities.longValue(gen.get("value")), gen -> Utilities.stringValue(gen.get("label"))));
-            Map<Long,String> departmentMap = departmentRepository.getActiveDepartmentLIst().stream().collect(Collectors.toMap(gen -> Utilities.longValue(gen.get("value")), gen -> Utilities.stringValue(gen.get("label"))));
-            Map<Long,String> designationMap = designationRepository.getAcitveDesignationList().stream().collect(Collectors.toMap(gen -> Utilities.longValue(gen.get("value")), gen -> Utilities.stringValue(gen.get("label"))));
-
             List<Map<String,Object>> employeeList = new ArrayList<>();
             List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_DATA_QUERY, filter.toString(), null, "emp.created_on desc");
             if(Utilities.isCollectionNotEmpty(employeeMapList)){
@@ -331,12 +372,10 @@ public class EmployeeServiceImp implements EmployeeService{
                     String contactNoCountryCode = Utilities.stringValue(employeeMap.get("contactNoCountryCode"));
                     String contactNo = Utilities.stringValue(employeeMap.get("contactNo"));
                     contactNo = contactNo.isEmpty() ? "" : contactNoCountryCode.isEmpty() ? contactNo : contactNoCountryCode + contactNo;
-                    String gender = Utilities.stringValue(genderMap.get(Utilities.longValue(employeeMap.get("genderId"))));
-                    String dateOfBirth = Utilities.getIndianDateFormatFromUSDate(Utilities.stringValue(employeeMap.get("dateOfBirth")));
                     String dateOfJoining = Utilities.getIndianDateFormatFromUSDate(Utilities.stringValue(employeeMap.get("dateOfJoining")));
-                    String department = Utilities.stringValue(departmentMap.get(Utilities.stringValue(employeeMap.get("departmentId"))));
-                    String designation = Utilities.stringValue(designationMap.get(Utilities.stringValue(employeeMap.get("designationId"))));
-                    String employeeType = Utilities.stringValue(employeeTypeMap.get(Utilities.stringValue(employeeMap.get("employeeTypeId"))));
+                    String department = Utilities.stringValue(employeeMap.get("department"));
+                    String designation = Utilities.stringValue(employeeMap.get("designation"));
+                    String employeeType = Utilities.stringValue(employeeMap.get("employeeType"));
 
                     Map<String,Object> dataMap = new LinkedHashMap<>();
                     dataMap.put("id",id);
@@ -345,8 +384,6 @@ public class EmployeeServiceImp implements EmployeeService{
                     dataMap.put("fullName",fullName);
                     dataMap.put("emailId",emailId);
                     dataMap.put("contactNo",contactNo);
-                    dataMap.put("gender",gender);
-                    dataMap.put("dateOfBirth",dateOfBirth);
                     dataMap.put("dateOfJoining",dateOfJoining);
                     dataMap.put("department",department);
                     dataMap.put("designation",designation);
@@ -362,10 +399,9 @@ public class EmployeeServiceImp implements EmployeeService{
     }
 
     @Override
-    public Map<String, Object> employeeById(Map<String, Object> param, HttpServletRequest request) {
+    public Map<String, Object> employeeById(Long id, HttpServletRequest request) {
         Map<String,Object> result_map = new LinkedHashMap<>();
         try{
-            Long id = Utilities.longValue(param.get("id"));
             if(id == null) throw new ValidationException("Employee not found.");
             List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_DATA_QUERY, "emp.id = "+ id, null, "emp.created_on desc");
             result_map.put("employee",employeeMapList);
@@ -376,14 +412,13 @@ public class EmployeeServiceImp implements EmployeeService{
     }
 
     @Override
-    public Map<String, Object> employeePreview(Map<String, Object> param, HttpServletRequest request) {
-        Long employeeId = Utilities.longValue(param.get("id"));
-        if (employeeId == null) {
+    public Map<String, Object> employeePreview(Long id, HttpServletRequest request) {
+        if (id == null) {
             throw new RuntimeException("Kindly select at least one employee.");
         }
         Map<String, Object> employeePreviewMap = new LinkedHashMap<>();
         Map<Long, String> salutationMap = salutationRepository.findAll().stream().collect(Collectors.toMap(Salutation::getId, Salutation::getName));
-        List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_PREVIEW_QUERY, "emp.id = " + employeeId, null, "emp.created_on desc");
+        List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_PREVIEW_QUERY, "emp.id = " + id, null, "emp.created_on desc");
         if (Utilities.isCollectionNotEmpty(employeeMapList)) {
             Map<String, Object> employeeMap = employeeMapList.get(0);
             employeePreviewMap.put("id", Utilities.longValue(employeeMap.get("id")));

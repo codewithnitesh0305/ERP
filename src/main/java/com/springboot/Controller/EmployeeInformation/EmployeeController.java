@@ -79,8 +79,8 @@ public class EmployeeController {
     }
 
     @PostMapping(value = "/employees", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> saveUpdateEmployee(@RequestPart("employee") @Valid EmployeeDto dto, @RequestPart(required = false) Map<String, MultipartFile> files, HttpServletRequest request) {
-        return employeeService.saveUpdateEmployee(files, dto, request);
+    public ResponseEntity<?> saveUpdateEmployee(@Valid @ModelAttribute EmployeeDto dto, HttpServletRequest request) {
+        return employeeService.saveUpdateEmployee(dto, request);
     }
 
     @GetMapping("/employees")
@@ -88,14 +88,14 @@ public class EmployeeController {
         return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.getAllEmployees(param,request)),HttpStatus.OK);
     }
 
-    @GetMapping("/employee")
-    public ResponseEntity<?> getEmployeeById(@RequestParam Map<String,Object> pram,HttpServletRequest request){
-        return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.employeeById(pram,request)),HttpStatus.OK);
+    @GetMapping("/employee/{id}")
+    public ResponseEntity<?> getEmployeeById(@PathVariable(value = "id") Long employeeId,HttpServletRequest request){
+        return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.employeeById(employeeId,request)),HttpStatus.OK);
     }
 
-    @GetMapping("/employee-preview")
-    public ResponseEntity<?> employeePreview(@RequestParam Map<String,Object> pram,HttpServletRequest request){
-        return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.employeePreview(pram,request)),HttpStatus.OK);
+    @GetMapping("/employee-preview/{id}")
+    public ResponseEntity<?> employeePreview(@PathVariable(value = "id") Long employeeId,HttpServletRequest request){
+        return new ResponseEntity<>(new Response<>("Successfully",true,employeeService.employeePreview(employeeId,request)),HttpStatus.OK);
     }
 
     @GetMapping("/employee-document-by-department")

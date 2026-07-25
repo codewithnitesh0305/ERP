@@ -3,6 +3,10 @@ package com.springboot.Dto.EmployeeInformation;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.Map;
 
 
 @AllArgsConstructor
@@ -14,10 +18,8 @@ public class EmployeeDto {
     private Long id;
     @NotNull(message = "Kindly select financial year.")
     private Long financialYearId;
-    private Long schoolId;
     private String employeeCode;
     private Boolean isChange;
-    private String employeeProfileImage;
     private Long salutationId;
     @NotEmpty(message = "First name is required.")
     private String firstName;
@@ -89,10 +91,7 @@ public class EmployeeDto {
     private String branch;
     private String reEnterAccountNo;
 
-    private String documentJson;
-
-    private String resignDate;
-    private String resign_remarks;
-    private String resign_document;
+    private List<DocumentSubmissionDto> documentSubmissionList;
+    private Map<String, MultipartFile> fileMap;
 
 }

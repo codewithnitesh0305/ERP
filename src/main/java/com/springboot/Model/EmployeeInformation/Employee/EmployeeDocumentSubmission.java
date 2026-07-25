@@ -33,6 +33,9 @@ public class EmployeeDocumentSubmission {
     @Column(name = "document_expiry_date")
     private String documentExpiryDate;
 
+    @Column(name = "submission_date")
+    private String submissionDate;
+
     @Column(name = "document_url")
     private String documentUrl;
 

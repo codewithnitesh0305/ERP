@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 public class OrganizationResponseDto {
 
     private Long id;
+    private String organizationImage;
     private String name;
     private String code;
     private String affiliationNo;

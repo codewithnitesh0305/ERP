@@ -109,6 +109,7 @@ public class OrganizationServiceImp implements OrganizationService{
         Organization organization = organizationRepository.findById(organizationId).orElseThrow(() -> new ResourceNotFoundException("Organization not found"));
         OrganizationResponseDto organizationResponseDto = new OrganizationResponseDto();
         organizationResponseDto.setId(Utilities.longValue(organization.getId()));
+        organizationResponseDto.setOrganizationImage(Utilities.getServingUrlFromImageString(organization.getOrganizationLogo()));
         organizationResponseDto.setName(Utilities.stringValue(organization.getName()));
         organizationResponseDto.setCode(Utilities.stringValue(organization.getCode()));
         organizationResponseDto.setAffiliationNo(Utilities.stringValue(organization.getAffiliationNo()));
