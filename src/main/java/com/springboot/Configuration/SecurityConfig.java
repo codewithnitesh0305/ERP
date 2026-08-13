@@ -4,7 +4,6 @@ import com.springboot.Security.JwtAuthenticationEntryPoint;
 import com.springboot.Security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.filters.CorsFilter;
-import org.hibernate.validator.internal.engine.messageinterpolation.parser.TokenIterator;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +19,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
@@ -30,7 +28,6 @@ public class SecurityConfig implements WebMvcConfigurer {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
-    private final TokenIterator tokenIterator;
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -54,7 +51,7 @@ public class SecurityConfig implements WebMvcConfigurer {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/**").authenticated()
-                                .requestMatchers("/auth/**","/h2-console").permitAll()
+                                .requestMatchers("/auth/**","/h2-console","/swagger-ui/**","/swagger-ui.html", "/v3/api-docs/**").permitAll()
                                 .anyRequest()
                                 .authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))

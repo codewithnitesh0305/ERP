@@ -305,24 +305,6 @@ public class EmployeeServiceImp implements EmployeeService{
         if (!documentSubmissionList.isEmpty()) employeeDocumentSubmissionRepository.saveAll(documentSubmissionList);
     }
 
-    public List<Map<String, Object>> parseEmployeeDocumentJson(String documentListStr) {
-        List<Map<String, Object>> documentMapList = new ArrayList<>();
-        if (documentListStr != null && !documentListStr.isEmpty()) {
-            JSONArray jsonArray = new JSONArray(documentListStr);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                Map<String, Object> documentMap = new HashMap<>();
-                Iterator<String> keys = jsonObject.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    documentMap.put(key, jsonObject.optString(key));
-                }
-                documentMapList.add(documentMap);
-            }
-        }
-        return documentMapList;
-    }
-
     @Override
     public Map<String, Object> getAllEmployees(Map<String, Object> param, HttpServletRequest request) {
         Map<String,Object> result_map = new LinkedHashMap<>();
