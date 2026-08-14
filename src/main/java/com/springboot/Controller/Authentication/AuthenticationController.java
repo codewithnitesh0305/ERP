@@ -21,23 +21,23 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String,Object> param, HttpServletRequest request){
-        return new ResponseEntity<>(new Response<>("Successfully",true,authenticationService.login(param,request)), HttpStatus.OK);
+    public ResponseEntity<?> login(@RequestBody Map<String,Object> param){
+        return new ResponseEntity<>(new Response<>("Successfully",true,authenticationService.login(param)), HttpStatus.OK);
     }
 
     @PostMapping("/forget-password")
-    public ResponseEntity<?> forgetPassword(@RequestBody Map<String,Object> param,HttpServletRequest request){
-        return new ResponseEntity<>(new Response<>("Successfully",true,authenticationService.forgetPassword(param,request)),HttpStatus.OK);
+    public ResponseEntity<?> forgetPassword(@RequestBody Map<String,Object> param){
+        return new ResponseEntity<>(new Response<>("Successfully",true,authenticationService.forgetPassword(param)),HttpStatus.OK);
     }
 
     @PostMapping("/otp-verification")
-    public ResponseEntity<?> otpVerification(@RequestBody Map<String,Object> param,HttpServletRequest request){
-        return new ResponseEntity<>(new Response<>("Successfully",true,authenticationService.otpVerification(param,request)),HttpStatus.OK);
+    public ResponseEntity<?> otpVerification(@RequestBody Map<String,Object> param ){
+        return new ResponseEntity<>(new Response<>("Successfully",true,authenticationService.otpVerification(param)),HttpStatus.OK);
     }
 
     @PostMapping("/update-password")
-    public ResponseEntity<?> updatePassword(@RequestBody Map<String,Object> param,HttpServletRequest request){
-        return new ResponseEntity<>(new Response<>("Successfully",true,authenticationService.updatePassword(param,request)),HttpStatus.OK);
+    public ResponseEntity<?> updatePassword(@RequestBody Map<String,Object> param){
+        return new ResponseEntity<>(new Response<>("Successfully",true,authenticationService.updatePassword(param)),HttpStatus.OK);
     }
 
 }

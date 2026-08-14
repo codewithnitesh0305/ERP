@@ -16,15 +16,14 @@ import java.util.function.Function;
 @Component
 public class JwtHelper {
     private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
-
     private static final String SECRET_KEY = "afafasfafafasfasfasfafacasdasfasxASFACASDFACASDFASFASFDAFASFASDAADSCSDFADCVSGCFVADXCcadwavfsfarvf";
 
-    //retrieve username from jwt token
+    //TODO: Retrieve username from jwt token
     public String getUsernameFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
     }
 
-    //retrieve expiration date from jwt token
+    //TODO:  Retrieve expiration date from jwt token
     public Date getExpirationDateFromToken(String token) {
         return getClaimFromToken(token,Claims::getExpiration);
     }
@@ -34,26 +33,28 @@ public class JwtHelper {
         return claimsResolver.apply(claims);
     }
 
-    //for retrieving any information from token we will need the secret key
+    //TODO:  For retrieving any information from token we will need the secret key
     private Claims getAllClaimsFromToken(String token) {
         return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
     }
 
-    //if the token has expired
+    //TODO:  if the token has expired
     private Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
         return expiration.before(new Date());
     }
 
-    //generate token from user
-    public String generateToken(Users users, Employees employees, Long organizationId) {
+    //TODO:  Generate token from user
+    public String generateToken(Users users,Long employeeId,Long organizationId,Long branchId,Long userTypeId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", users.getId());
-        claims.put("employeeId", employees.getId());
-        claims.put("emailId", users.getEmailId());
-        claims.put("branchId", employees.getBranchId());
+        claims.put("employeeId", employeeId);
         claims.put("organizationId", organizationId);
-        return doGenerateToken(claims, users.getEmailId());
+        claims.put("branchId", branchId);
+        claims.put("userTypeId", userTypeId);
+        claims.put("emailId", users.getEmailId());
+        return doGenerateToken(claims,users.getEmailId()
+        );
     }
 
     private String doGenerateToken(Map<String , Object> claims, String subject) {
@@ -62,7 +63,7 @@ public class JwtHelper {
                 .signWith(SignatureAlgorithm.HS512,SECRET_KEY).compact();
     }
 
-    //validate token
+    //TODO: validate token
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = getUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));

@@ -3,7 +3,6 @@ package com.springboot.Repository;
 import com.springboot.Utility.Utilities;
 import jakarta.persistence.EntityManager;
 
-import java.lang.reflect.UndeclaredThrowableException;
 import java.util.List;
 import java.util.Map;
 
@@ -15,9 +14,7 @@ public class CustomRepository {
         filter = Utilities.filterValue(filter);
         groupBy = Utilities.groupByValue(groupBy);
         orderBy = Utilities.orderByValue(orderBy);
-
         query = query + filter + groupBy + orderBy;
-        List<Map<String,Object>> result_list = Utilities.getToupleRecordsWithObjects(entityManager,query,param);
-        return  result_list;
+        return  Utilities.getToupleRecordsWithObjects(entityManager,query,param);
     }
 }
