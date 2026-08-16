@@ -2,9 +2,11 @@ package com.springboot.Service.Authentication;
 
 import com.springboot.Exception.ResourceNotFoundException;
 import com.springboot.Exception.ValidationException;
+import com.springboot.Model.User.Tokens;
 import com.springboot.Model.User.UserOtp;
 import com.springboot.Model.User.Users;
 import com.springboot.Repository.EmployeeInformation.Employees.EmployeeRepository;
+import com.springboot.Repository.User.TokenRepository;
 import com.springboot.Repository.User.UserOtpRepository;
 import com.springboot.Repository.User.UserRepository;
 import com.springboot.Security.JwtHelper;
@@ -15,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -29,8 +32,10 @@ public class AuthenticationServiceImp implements AuthenticationService{
     private final JwtHelper jwtHelper;
     private final EmailService emailService;
     private final UserOtpRepository userOtpRepository;
+    private final TokenRepository tokenRepository;
 
     @Override
+    @Transactional
     public Map<String, Object> login(Map<String, Object> param) {
         Map<String, Object> response = new LinkedHashMap<>();
         String emailId = Utilities.stringValue(param.get("emailId"));
@@ -56,6 +61,8 @@ public class AuthenticationServiceImp implements AuthenticationService{
         Long organizationId = Utilities.longValue(employeeDetailMap.get("organizationId"));
         Long userTypeId = Utilities.longValue(employeeDetailMap.get("userTypeId"));
         String token = jwtHelper.generateToken(users, employeeId, organizationId, branchId, userTypeId);
+        tokenRepository.logoutAllExistingTokensByUserId(users.getId());
+        saveUserTokens(users, token);
         Map<String, Object> organizationDetails = new LinkedHashMap<>();
         organizationDetails.put("organizationId", organizationId);
         organizationDetails.put("branchId", branchId);
@@ -73,6 +80,14 @@ public class AuthenticationServiceImp implements AuthenticationService{
         response.put("token", token);
         response.put("organization", organizationDetails);
         response.put("userDetails", userDetails);
+    }
+
+    private void saveUserTokens(Users users, String token) {
+        Tokens tokens = new Tokens();
+        tokens.setToken(token);
+        tokens.setIsLogOut(false);
+        tokens.setUserId(users.getId());
+        tokenRepository.save(tokens);
     }
 
     @Override

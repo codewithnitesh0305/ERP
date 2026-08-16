@@ -1,10 +1,11 @@
 package com.springboot.Security;
 
-import com.springboot.Model.EmployeeInformation.Employee.Employees;
 import com.springboot.Model.User.Users;
+import com.springboot.Repository.User.TokenRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +15,10 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Component
+@RequiredArgsConstructor
 public class JwtHelper {
+
+    private final TokenRepository tokenRepository;
     private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
     private static final String SECRET_KEY = "afafasfafafasfasfasfafacasdasfasxASFACASDFACASDFASFASFDAFASFASDAADSCSDFADCVSGCFVADXCcadwavfsfarvf";
 
@@ -66,6 +70,7 @@ public class JwtHelper {
     //TODO: validate token
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        Boolean isLogout = tokenRepository.findByToken(token).map(t -> !t.getIsLogOut()).orElse(false);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token)) && isLogout;
     }
 }
