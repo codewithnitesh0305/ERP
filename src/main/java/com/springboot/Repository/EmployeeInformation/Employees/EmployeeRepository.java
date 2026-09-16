@@ -13,8 +13,11 @@ import java.util.Optional;
 public interface EmployeeRepository extends JpaRepository<Employees,Long> {
     Optional<Employees> findByEmailId(String email);
 
-    boolean existsByContactNoAndIdNot(String contactNo, Long id);
-    boolean existsByEmailIdAndIdNot(String emailId, Long id);
+    @Query(value = "SELECT COUNT(id) FROM employees WHERE email_id = :emailId AND (:id IS NULL OR id <> :id)", nativeQuery = true)
+    Long existsByEmailId(@Param("emailId") String emailId,@Param("id") Long id);
+
+    @Query(value = "SELECT COUNT(id) FROM employees WHERE contact_no = :contactNo AND (:id IS NULL OR id <> :id)" , nativeQuery = true)
+    Long existByContactNo(@Param("contactNo") String contactNo,@Param("id") Long id );
 
     @Query(nativeQuery = true, value = """
     SELECT

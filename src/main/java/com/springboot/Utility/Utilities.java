@@ -4,7 +4,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
+import jakarta.servlet.http.HttpServletRequest;
 import org.json.JSONObject;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -165,5 +169,36 @@ public class Utilities {
     public static String referenceNo(){
         return UUID.randomUUID().toString().replace("-","").substring(0,10);
     }
+
+    public static Pageable pagination(Integer page,String shortBy,Integer pageSize) {
+        if (pageSize == null || pageSize == 0) pageSize = Constants.DEFAULT_PAGE_SIZE;
+        return PageRequest.of(page, pageSize, Sort.by(shortBy).descending());
+    }
+
+    public static String pagination(Integer page, Integer pageSize) {
+        if (page == null || page < 0) return "";
+        if (pageSize == null || pageSize <= 0) pageSize = Constants.DEFAULT_PAGE_SIZE;
+        int offset = (page - 1) * pageSize;
+        return " LIMIT " + pageSize + " OFFSET " + offset;
+    }
+    public static Integer getPageNo(HttpServletRequest request){
+        return Utilities.integerValue(request.getHeader("pageNo"));
+    }
+
+    public static void pagination(Map<String, Object> resultMap,HttpServletRequest request,Long totalElements) {
+        Integer page = getPageNo(request);
+        if (page == null || page < 1) page = 1;
+        Integer pageSize = Constants.DEFAULT_PAGE_SIZE;
+        Long totalPages = (totalElements + pageSize - 1) / pageSize;
+        Map<String, Object> pagination = new LinkedHashMap<>();
+        pagination.put(Constants.PAGE, page);
+        pagination.put(Constants.PAGE_SIZE, pageSize);
+        pagination.put(Constants.TOTAL_COUNT, totalElements);
+        pagination.put(Constants.TOTAL_PAGES, totalPages);
+        pagination.put(Constants.HAS_NEXT, page < totalPages);
+        pagination.put(Constants.HAS_PREVIOUS, page > 1);
+        resultMap.put("pagination", pagination);
+    }
+
 
 }

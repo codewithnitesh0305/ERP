@@ -94,12 +94,20 @@ public class CustomRepo {
     }
 
 
-    public List<Map<String,Object>> customizeDataList(String query, String filter,String groupBy,String orderBy){
+    public List<Map<String,Object>> customizeDataList(String query, String filter,String groupBy,String orderBy,Integer pageNo){
         filter = Utilities.filterValue(filter);
         groupBy = Utilities.groupByValue(groupBy);
         orderBy = Utilities.orderByValue(orderBy);
-         query = query + filter + groupBy + orderBy;
+        String limit = Utilities.pagination(pageNo,null);
+         query = query + filter + groupBy + orderBy + limit;
         return Utilities.getToupleRecordsWithObjects(entityManager,query,null);
+    }
+
+    public Object customSingleValue(String query,String filter,String groupBy){
+        filter = Utilities.filterValue(filter);
+        groupBy = Utilities.groupByValue(groupBy);
+        query = query + filter + groupBy;
+        return entityManager.createNativeQuery(query).getSingleResult();
     }
 
     public Integer getContactNoLengthByContactCode(String contactCode) {

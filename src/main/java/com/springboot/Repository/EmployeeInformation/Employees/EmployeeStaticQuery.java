@@ -14,9 +14,17 @@ public class EmployeeStaticQuery {
             emp.is_corresponding_same_as_permanent as isPermanentSameAsCorresponding, emp.permanent_address as permanentAddress,emp.permanent_country_id as permanentCountryId,emp.permanent_state_id as permanentStateId,emp.permanent_state_id as permanentStateId,emp.permanent_city_id as permanentCityId,emp.permanent_pin_code as permanentPinCode,
             emp.corresponding_address as correspondingAddress,emp.corresponding_country_id as correspondingCountryId,emp.corresponding_state_id as correspondingStateId,emp.corresponding_state_id as correspondingStateId,emp.corresponding_city_id as correspondingCityId,emp.corresponding_pin_code as correspondingPinCode
             From employees emp
-            Left join organization_department dept on dept.id = emp.department_id
-            Left join organization_designation deg on deg.id = emp.designation_id
-            Left join employee_type empTyp on empTyp.id = emp.employee_type_id
+            Inner join organization_department dept on dept.id = emp.department_id
+            Inner join organization_designation deg on deg.id = emp.designation_id
+            Inner join employee_type empTyp on empTyp.id = emp.employee_type_id
+            """;
+
+    public final static String EMPLOYEE_DATA_COUNT_QUERY = """
+            Select COUNT(emp.id) totalCount
+            From employees emp
+            Inner join organization_department dept on dept.id = emp.department_id
+            Inner join organization_designation deg on deg.id = emp.designation_id
+            Inner join employee_type empTyp on empTyp.id = emp.employee_type_id
             """;
 
     public final static String INACTIVE_EMPLOYEE_QUERY = """
@@ -24,6 +32,10 @@ public class EmployeeStaticQuery {
             emp.resign_date as resignDate,emp.releasing_date as releasingDate,emp.contact_no_country_code as employeeContactCode,emp.contact_no employeeContactNo,emp.email_id employeeEmail,
             emp.department_id as departmentId,emp.designation_id as designationId
             From employees emp
+            """;
+
+    public final static String INACTIVE_EMPLOYEE_COUNT_QUERY = """
+            Select COUNT(emp.id) totalCount From employees emp
             """;
 
     public final static String EMPLOYEE_PREVIEW_QUERY = """

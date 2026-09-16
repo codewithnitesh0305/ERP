@@ -22,8 +22,6 @@ import com.springboot.Utility.ApiResponse;
 import com.springboot.Utility.Utilities;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -53,6 +51,8 @@ public class EmployeeServiceImp implements EmployeeService{
     private final ReligionRepository religionRepository;
     private final CasteRepository casteRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmployeeExperienceService employeeExperienceService;
+    private final EmployeeQualificationService employeeQualificationService;
 
     @Override
     @Transactional
@@ -67,6 +67,8 @@ public class EmployeeServiceImp implements EmployeeService{
             Boolean isEmployeeProfileImageChange = dto.getIsChange();
             Long financialYearId = dto.getFinancialYearId();
             String employeeCode = Utilities.stringValue(dto.getEmployeeCode());
+            Long currentEmployeeId = Utilities.currentEmployeeId();
+            String currentDateTime = Utilities.getCurrentDateTime();
 
             if (employeeContactCode != null && !employeeContactCode.isEmpty()) {
                 Integer lengthByContactCode = customRepo.getContactNoLengthByContactCode(employeeContactCode);
@@ -92,11 +94,11 @@ public class EmployeeServiceImp implements EmployeeService{
                     return ApiResponse.apiValidation("Spouse Contact No. should be " + lengthByContactCode + " digits.");
                 }
             }
-            boolean isContactNoExist = employeeRepository.existsByContactNoAndIdNot(dto.getContactNo(), id);
-            if(isContactNoExist) return ApiResponse.apiValidation("Contact No. already exist.");
+            Long isContactNoExist = employeeRepository.existByContactNo(dto.getContactNo(),id);
+            if(isContactNoExist > 0) return ApiResponse.apiValidation("Contact No. already exist.");
 
-            boolean isEmailExist = employeeRepository.existsByEmailIdAndIdNot(dto.getEmailId(), id);
-            if(isEmailExist) return ApiResponse.apiValidation("Email Id already exist.");
+            Long isEmailExist = employeeRepository.existsByEmailId(dto.getEmailId(),id);
+            if(isEmailExist > 0) return ApiResponse.apiValidation("Email ID already exist.");
 
             if (!Objects.equals(dto.getAccountNo(), dto.getReEnterAccountNo())) return ApiResponse.apiValidation("Account No. and Re-enter Account No. should match.");
             Employees employees = id == null ? new Employees() : employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee not found."));
@@ -119,25 +121,30 @@ public class EmployeeServiceImp implements EmployeeService{
                     }
                 }
             }
-            employees = setEmployeesData(employees,dto,employeeCode,request);
+            employees = setEmployeesData(employees,dto,employeeCode,currentEmployeeId,currentDateTime);
             Long employeeId = employeeRepository.save(employees).getId();
-            processedDocument(dto, employeeId, request);
-            if (id == null) {
-                Users user = new Users();
-                user.setEmailId(dto.getEmailId());
-                user.setEmployeeId(employeeId);
-                user.setPassword(passwordEncoder.encode("Employee@123"));
-                user.setCreatedBy(null);
-                user.setCreatedOn(Utilities.getCurrentDateTime());
-                userRepository.save(user);
-            }
+            saveUpdateDocumentDetails(dto, employeeId,currentEmployeeId,currentDateTime);
+            employeeQualificationService.saveUpdateQualificationDetails(dto.getEmployeeQualificationList(),dto.getDeletedEmployeeQualificationIds(),employeeId,currentEmployeeId,currentDateTime);
+            employeeExperienceService.saveUpdateExperienceDetails(dto.getEmployeeExperienceList(),dto.getDeletedEmployeeExperienceIds(),employeeId,currentEmployeeId,currentDateTime);
+            saveUpdateUser(dto, employeeId,currentEmployeeId,currentDateTime);
             return ApiResponse.apiSuccess();
         } catch (Exception ex) {
             throw new RuntimeException("Something went wrong " + ex.getMessage());
         }
     }
 
-    public Employees setEmployeesData(Employees employees,EmployeeDto dto,String employeeCode,HttpServletRequest request) throws IOException {
+    private void saveUpdateUser(EmployeeDto dto, Long employeeId,Long currentEmployeeId,String currentDateTime) {
+        String emailId = dto.getEmailId();
+        Users users = emailId == null ? new Users() : userRepository.findByEmailId(dto.getEmailId()).orElseThrow(() -> new ResourceNotFoundException("User id not found."));
+        users.setEmailId(dto.getEmailId());
+        users.setEmployeeId(employeeId);
+        if(users.getId() == null) users.setPassword(passwordEncoder.encode("Employee@123"));
+        users.setCreatedBy(currentEmployeeId);
+        users.setCreatedOn(currentDateTime);
+        userRepository.save(users);
+    }
+
+    public Employees setEmployeesData(Employees employees,EmployeeDto dto,String employeeCode,Long currentEmployeeId,String currentDateTime) throws IOException {
         // Basic Details
         Long id = dto.getId();
         employees.setEmployeeCode(employeeCode);
@@ -222,16 +229,16 @@ public class EmployeeServiceImp implements EmployeeService{
         employees.setBankName(Utilities.stringNullValue(dto.getBankName()));
         employees.setBranch(Utilities.stringNullValue(dto.getBranch()));
         if(id == null){
-            employees.setCreatedBy(Utilities.currentEmployeeId());
-            employees.setCreatedOn(Utilities.getCurrentDateTime());
+            employees.setCreatedBy(currentEmployeeId);
+            employees.setCreatedOn(currentDateTime);
         }else{
-            employees.setUpdatedBy(Utilities.currentEmployeeId());
-            employees.setUpdatedOn(Utilities.getCurrentDateTime());
+            employees.setUpdatedBy(currentEmployeeId);
+            employees.setUpdatedOn(currentDateTime);
         }
         return employees;
     }
 
-    public void processedDocument(EmployeeDto dto, Long employeeId, HttpServletRequest request) throws IOException {
+    public void saveUpdateDocumentDetails(EmployeeDto dto, Long employeeId,Long currentEmployeeId,String currentDateTime) throws IOException {
         Long departmentId = dto.getDepartmentId();
         String createdOn = Utilities.getCurrentDateTime();
         List<DocumentSubmissionDto> documentMapList = dto.getDocumentSubmissionList();
@@ -283,8 +290,8 @@ public class EmployeeServiceImp implements EmployeeService{
                         } else {
                             employeeDocumentSubmission.setDocumentUrl(null);
                         }
-                        employeeDocumentSubmission.setUpdatedBy(null);
-                        employeeDocumentSubmission.setUpdatedOn(Utilities.getCurrentDateTime());
+                        employeeDocumentSubmission.setUpdatedBy(currentEmployeeId);
+                        employeeDocumentSubmission.setUpdatedOn(currentDateTime);
                     }
                 } else {
                     employeeDocumentSubmission = new EmployeeDocumentSubmission();
@@ -305,10 +312,14 @@ public class EmployeeServiceImp implements EmployeeService{
         if (!documentSubmissionList.isEmpty()) employeeDocumentSubmissionRepository.saveAll(documentSubmissionList);
     }
 
+
+
+
     @Override
     public Map<String, Object> getAllEmployees(Map<String, Object> param, HttpServletRequest request) {
         Map<String,Object> result_map = new LinkedHashMap<>();
         try{
+            Integer pageNo = Utilities.getPageNo(request);
             Long employeeTypeId = Utilities.longValue(param.get("employeeTypeId"));
             Long departmentId = Utilities.longValue(param.get("departmentId"));
             Long designationId = Utilities.longValue(param.get("designationId"));
@@ -318,30 +329,27 @@ public class EmployeeServiceImp implements EmployeeService{
             if(financialYearId == null){
                 financialYearId = financialYearRepository.findIdByIsActiveTrue();
             }
-            StringBuilder filter = new StringBuilder("(emp.releasing_date IS NULL OR emp.releasing_date > CURRENT_DATE())");
+            StringBuilder filter = new StringBuilder("(emp.releasing_date IS NULL OR emp.releasing_date <= CURRENT_DATE())");
             if(employeeTypeId != null){
                 filter.append(" and emp.employee_type_id = ").append(employeeTypeId);
             }
             if(financialYearId != null){
-                if(!filter.isEmpty()) filter.append(" and ");
-                filter.append(" emp.financial_year_id = ").append(financialYearId);
+                filter.append(" and emp.financial_year_id = ").append(financialYearId);
             }
             if(departmentId != null){
-                if(!filter.isEmpty()) filter.append(" and ");
-                filter.append(" emp.department_id = ").append(departmentId);
+                filter.append(" and emp.department_id = ").append(departmentId);
             }
             if(designationId != null){
-                if(!filter.isEmpty()) filter.append(" and ");
-                filter.append(" emp.designation_id = ").append(designationId);
+                filter.append(" and emp.designation_id = ").append(designationId);
             }
             if(genderId != null){
-                if(!filter.isEmpty()) filter.append(" and ");
-                filter.append(" emp.gender_id = ").append(genderId);
+                filter.append(" and emp.gender_id = ").append(genderId);
             }
 
             Map<Long,String> salutationMap = salutationRepository.getActiveSalutationList().stream().collect(Collectors.toMap(sal -> Utilities.longValue(sal.get("value")), sal -> Utilities.stringValue(sal.get("label"))));
             List<Map<String,Object>> employeeList = new ArrayList<>();
-            List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_DATA_QUERY, filter.toString(), null, "emp.created_on desc");
+            Long totalCount = Utilities.longValue(customRepo.customSingleValue(EmployeeStaticQuery.EMPLOYEE_DATA_COUNT_QUERY, filter.toString(), null));
+            List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_DATA_QUERY, filter.toString(), null, "emp.created_on desc",pageNo);
             if(Utilities.isCollectionNotEmpty(employeeMapList)){
                 for(Map<String,Object> employeeMap : employeeMapList){
                     Long id = Utilities.longValue(employeeMap.get("id"));
@@ -374,6 +382,7 @@ public class EmployeeServiceImp implements EmployeeService{
                 }
             }
             result_map.put("employees",employeeList);
+            Utilities.pagination(result_map,request,totalCount);
         }catch (Exception ex){
             throw new RuntimeException("Something went wrong: "+ ex.getMessage());
         }
@@ -385,7 +394,7 @@ public class EmployeeServiceImp implements EmployeeService{
         Map<String,Object> result_map = new LinkedHashMap<>();
         try{
             if(id == null) throw new ValidationException("Employee not found.");
-            List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_DATA_QUERY, "emp.id = "+ id, null, "emp.created_on desc");
+            List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_DATA_QUERY, "emp.id = "+ id, null, "emp.created_on desc",null);
             result_map.put("employee",employeeMapList);
             return result_map;
         }catch (Exception ex){
@@ -400,7 +409,7 @@ public class EmployeeServiceImp implements EmployeeService{
         }
         Map<String, Object> employeePreviewMap = new LinkedHashMap<>();
         Map<Long, String> salutationMap = salutationRepository.findAll().stream().collect(Collectors.toMap(Salutation::getId, Salutation::getName));
-        List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_PREVIEW_QUERY, "emp.id = " + id, null, "emp.created_on desc");
+        List<Map<String, Object>> employeeMapList = customRepo.customizeDataList(EmployeeStaticQuery.EMPLOYEE_PREVIEW_QUERY, "emp.id = " + id, null, "emp.created_on desc",null);
         if (Utilities.isCollectionNotEmpty(employeeMapList)) {
             Map<String, Object> employeeMap = employeeMapList.get(0);
             employeePreviewMap.put("id", Utilities.longValue(employeeMap.get("id")));
@@ -538,13 +547,14 @@ public class EmployeeServiceImp implements EmployeeService{
     public Map<String, Object> resignEmployeeList(Map<String, Object> param, HttpServletRequest request) {
         String fts = Utilities.stringValue(param.get("fts"));
         Long currentBranchId = Utilities.currentBranchId();
-        StringBuilder filter = new StringBuilder();
-
+        Integer pageNo = Utilities.getPageNo(request);
+        String filter = "emp.branch_id = '" + currentBranchId + "' and (emp.emp.resign_date is not null and emp.emp.resign_date < CURATE()";
         Map<String,Object> resultMap = new LinkedHashMap<>();
         List<Map<String,Object>> resignEmployeeList = new ArrayList<>();
         Map<String, Object> departmentMap = customRepo.getAllDepartment();
         Map<String, Object> designationMap = customRepo.getAllDesignation();
-        List<Map<String, Object>> inActiveEmployeeList = customRepo.customizeDataList(EmployeeStaticQuery.INACTIVE_EMPLOYEE_QUERY, filter.toString(), null, "emp.resign_date desc");
+        Long totalCount = Utilities.longValue(customRepo.customSingleValue(EmployeeStaticQuery.INACTIVE_EMPLOYEE_COUNT_QUERY, filter, null));
+        List<Map<String, Object>> inActiveEmployeeList = customRepo.customizeDataList(EmployeeStaticQuery.INACTIVE_EMPLOYEE_QUERY,filter, null, "emp.resign_date desc",pageNo);
         if(Utilities.isCollectionNotEmpty(inActiveEmployeeList)){
             for(Map<String,Object> inActiveEmployeeMap : inActiveEmployeeList){
                 Map<String,Object> dataMap = new LinkedHashMap<>();
@@ -560,6 +570,7 @@ public class EmployeeServiceImp implements EmployeeService{
             }
         }
         resultMap.put("resignEmployeeList",resignEmployeeList);
+        Utilities.pagination(resultMap,request,totalCount);
         return resultMap;
     }
 }
