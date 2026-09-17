@@ -34,6 +34,7 @@ public class FileManager {
         Map uploadedImages = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap("resource_type", "image"));
         jsonObject.put("imageUrl", Utilities.stringValue(uploadedImages.get("secure_url")));
         jsonObject.put("publicIp", Utilities.stringValue(uploadedImages.get("public_id")));
+        jsonObject.put("originalFileName", Utilities.stringValue(file.getOriginalFilename()));
         return jsonObject.toString();
     }
 

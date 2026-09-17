@@ -25,6 +25,8 @@ public class EmployeeDto {
     private String employeeCode;
     private Boolean isChange;
 
+    private MultipartFile employeeProfileImage;
+
     @Positive(message = "Invalid salutation.")
     @Positive(message = "Salutation id can't be zero.")
     private Long salutationId;
@@ -151,7 +153,5 @@ public class EmployeeDto {
 
     private Set<Long> deletedEmployeeExperienceIds;
     private List<EmployeeExperienceDto> employeeExperienceList;
-
-    private Map<String, MultipartFile> fileMap;
 
 }

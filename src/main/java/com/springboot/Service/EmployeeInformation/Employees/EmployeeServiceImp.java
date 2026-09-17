@@ -53,19 +53,20 @@ public class EmployeeServiceImp implements EmployeeService{
     private final PasswordEncoder passwordEncoder;
     private final EmployeeExperienceService employeeExperienceService;
     private final EmployeeQualificationService employeeQualificationService;
+    private final EmployeeDocumentSubmissionService employeeDocumentSubmissionService;
 
     @Override
     @Transactional
     public ResponseEntity<?> saveUpdateEmployee(EmployeeDto dto, HttpServletRequest request) {
         try {
             Long id = dto.getId();
-            String employeeContactCode = dto.getContactNoCountryCode();
-            String fatherContactCode = dto.getFatherContactNoCountryCode();
-            String motherContactCode = dto.getMotherContactNoCountryCode();
-            String spouseContactCode = dto.getSpouseContactNoCountryCode();
-            Long departmentId = dto.getDepartmentId();
-            Boolean isEmployeeProfileImageChange = dto.getIsChange();
-            Long financialYearId = dto.getFinancialYearId();
+            String employeeContactCode = Utilities.stringNullValue(dto.getContactNoCountryCode());
+            String fatherContactCode = Utilities.stringNullValue(dto.getFatherContactNoCountryCode());
+            String motherContactCode = Utilities.stringNullValue(dto.getMotherContactNoCountryCode());
+            String spouseContactCode = Utilities.stringNullValue(dto.getSpouseContactNoCountryCode());
+            Long departmentId = Utilities.longValue(dto.getDepartmentId());
+            Boolean isEmployeeProfileImageChange = Utilities.booleanValue(dto.getIsChange());
+            Long financialYearId = Utilities.longValue(dto.getFinancialYearId());
             String employeeCode = Utilities.stringValue(dto.getEmployeeCode());
             Long currentEmployeeId = Utilities.currentEmployeeId();
             String currentDateTime = Utilities.getCurrentDateTime();
@@ -104,10 +105,9 @@ public class EmployeeServiceImp implements EmployeeService{
             Employees employees = id == null ? new Employees() : employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee not found."));
             if(employeeCode.isBlank()) employeeCode = employeeAutoNumberSchemeService.generateEmployeeAutoNumber(financialYearId, departmentId);
 
-            Map<String,MultipartFile> employeeImageMap = dto.getFileMap();
-            if(employeeImageMap != null){
-                MultipartFile employeeImage = employeeImageMap.getOrDefault("employeeProfileImage",null);
-                String employeeProfileImage = FileManager.uploadFile(employeeImage);
+            MultipartFile employeeProfileImage1 = dto.getEmployeeProfileImage();
+            if(employeeProfileImage1 != null){
+                String employeeProfileImage = FileManager.uploadFile(employeeProfileImage1);
                 if(isEmployeeProfileImageChange){
                     String existingProfileImage = employees.getEmployeeProfileImage();
                     if(existingProfileImage != null && !existingProfileImage.isEmpty()){
@@ -123,7 +123,7 @@ public class EmployeeServiceImp implements EmployeeService{
             }
             employees = setEmployeesData(employees,dto,employeeCode,currentEmployeeId,currentDateTime);
             Long employeeId = employeeRepository.save(employees).getId();
-            saveUpdateDocumentDetails(dto, employeeId,currentEmployeeId,currentDateTime);
+            employeeDocumentSubmissionService.saveUpdateDocumentDetails(dto, employeeId,currentEmployeeId,currentDateTime);
             employeeQualificationService.saveUpdateQualificationDetails(dto.getEmployeeQualificationList(),dto.getDeletedEmployeeQualificationIds(),employeeId,currentEmployeeId,currentDateTime);
             employeeExperienceService.saveUpdateExperienceDetails(dto.getEmployeeExperienceList(),dto.getDeletedEmployeeExperienceIds(),employeeId,currentEmployeeId,currentDateTime);
             saveUpdateUser(dto, employeeId,currentEmployeeId,currentDateTime);
@@ -238,79 +238,7 @@ public class EmployeeServiceImp implements EmployeeService{
         return employees;
     }
 
-    public void saveUpdateDocumentDetails(EmployeeDto dto, Long employeeId,Long currentEmployeeId,String currentDateTime) throws IOException {
-        Long departmentId = dto.getDepartmentId();
-        String createdOn = Utilities.getCurrentDateTime();
-        List<DocumentSubmissionDto> documentMapList = dto.getDocumentSubmissionList();
-        Map<Long, Boolean> employeeDocumentMap = new HashMap<>();
-        List<EmployeeDocument> employeeDocumentList = employeeDocumentRepository.findByDepartmentId(departmentId);
-        if (Utilities.isCollectionNotEmpty(employeeDocumentList)) {
-            for (EmployeeDocument employeeDocument : employeeDocumentList) {
-                employeeDocumentMap.put(employeeDocument.getId(), employeeDocument.getIsMandatory());
-            }
-        }
-        Map<Long, EmployeeDocumentSubmission> existingEmployeeDocumentMap = new LinkedHashMap<>();
-        if (employeeId != null) {
-            List<EmployeeDocumentSubmission> existingEmployeeDocument = employeeDocumentSubmissionRepository.findByEmployeeId(employeeId);
-            if (Utilities.isCollectionNotEmpty(existingEmployeeDocument)) {
-                for (EmployeeDocumentSubmission documentSubmission : existingEmployeeDocument) {
-                    existingEmployeeDocumentMap.put(documentSubmission.getId(), documentSubmission);
-                }
-            }
-        }
 
-        List<EmployeeDocumentSubmission> documentSubmissionList = new ArrayList<>();
-        if (Utilities.isCollectionNotEmpty(documentMapList)) {
-            for (DocumentSubmissionDto documentSubmissionDto : documentMapList) {
-                Long id = Utilities.longValue(documentSubmissionDto.getId());
-                Long documentId = Utilities.longValue(documentSubmissionDto.getDocumentId());
-                String documentName = Utilities.stringValue(documentSubmissionDto.getDocumentName());
-                String expiryDate = Utilities.getUSDateFromIndianDate(Utilities.stringValue(documentSubmissionDto.getExpiryDate()));
-                String submissionDate = Utilities.getUSDateFromIndianDate(Utilities.stringValue(documentSubmissionDto.getSubmissionDate()));
-                String fileName = Utilities.stringValue(documentSubmissionDto.getFileName());
-                String documentNumber = Utilities.stringValue(documentSubmissionDto.getDocumentNumber());
-                Boolean isFileChange = Utilities.booleanValue(documentSubmissionDto.getIsFileChange());
-                Boolean isDocumentMandatory = employeeDocumentMap.get(documentId);
-                if (Boolean.TRUE.equals(isDocumentMandatory) && (documentNumber.isEmpty() || expiryDate.isEmpty() && submissionDate.isEmpty())) {
-                    throw new ValidationException(documentName + " details is mandatory");
-                }
-                EmployeeDocumentSubmission employeeDocumentSubmission;
-                Map<String, MultipartFile> multipartFileMap = dto.getFileMap();
-                MultipartFile multipartPart = multipartFileMap.getOrDefault(fileName,null);
-                if (multipartPart != null && existingEmployeeDocumentMap.containsKey(id)) {
-                    employeeDocumentSubmission = existingEmployeeDocumentMap.get(id);
-                    if (Boolean.TRUE.equals(isFileChange)) {
-                        String documentJson = FileManager.uploadFile(multipartPart);
-                        if (documentJson != null && !documentJson.isEmpty()) {
-                            String oldDocument = employeeDocumentSubmission.getDocumentUrl();
-                            if (oldDocument != null && !oldDocument.isEmpty()) {
-                                FileManager.deleteFile(oldDocument);
-                            }
-                            employeeDocumentSubmission.setDocumentUrl(documentJson);
-                        } else {
-                            employeeDocumentSubmission.setDocumentUrl(null);
-                        }
-                        employeeDocumentSubmission.setUpdatedBy(currentEmployeeId);
-                        employeeDocumentSubmission.setUpdatedOn(currentDateTime);
-                    }
-                } else {
-                    employeeDocumentSubmission = new EmployeeDocumentSubmission();
-                    String documentJson = FileManager.uploadFile(multipartPart);
-                    employeeDocumentSubmission.setDocumentUrl(documentJson);
-                    employeeDocumentSubmission.setDepartmentId(departmentId);
-                    employeeDocumentSubmission.setDocumentId(documentId);
-                    employeeDocumentSubmission.setEmployeeId(employeeId);
-                    employeeDocumentSubmission.setCreatedBy(null);
-                    employeeDocumentSubmission.setCreatedOn(createdOn);
-                }
-                employeeDocumentSubmission.setDocumentNo(documentNumber);
-                employeeDocumentSubmission.setDocumentExpiryDate(expiryDate);
-                employeeDocumentSubmission.setSubmissionDate(submissionDate);
-                documentSubmissionList.add(employeeDocumentSubmission);
-            }
-        }
-        if (!documentSubmissionList.isEmpty()) employeeDocumentSubmissionRepository.saveAll(documentSubmissionList);
-    }
 
 
 

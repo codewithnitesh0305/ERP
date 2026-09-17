@@ -2,6 +2,7 @@ package com.springboot.Dto.EmployeeInformation;
 
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class DocumentSubmissionDto {
@@ -11,6 +12,7 @@ public class DocumentSubmissionDto {
 
     @Positive(message = "Document id can't be 0.")
     private Long documentId;
+    MultipartFile multipartFile;
     private String documentName;
     private String expiryDate;
     private String submissionDate;
