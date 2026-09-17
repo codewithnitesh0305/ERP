@@ -6,5 +6,5 @@ import java.io.IOException;
 
 public interface EmployeeDocumentSubmissionService {
 
-    void saveUpdateDocumentDetails(EmployeeDto dto, Long employeeId, Long currentEmployeeId, String currentDateTime) throws IOException
+    void saveUpdateDocumentDetails(EmployeeDto dto, Long employeeId, Long currentEmployeeId, String currentDateTime) throws IOException;
 }
